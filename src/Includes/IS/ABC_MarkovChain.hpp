@@ -23,11 +23,9 @@ typedef LinAlg::Matrix_t Matrix_t;
 struct NFData
 {
 
-    NFData() : FVup_(), FVdown_(), Nup_(), Ndown_(), dummy_(){};
-    SiteVector_t FVup_;
-    SiteVector_t FVdown_;
-    Matrix_t Nup_;
-    Matrix_t Ndown_;
+    NFData() : F_(), N_(), dummy_(){};
+    SiteVector_t F_;
+    Matrix_t N_;
     Matrix_t dummy_;
 };
 
@@ -39,7 +37,7 @@ class ABC_MarkovChain
 
   public:
     const size_t Nc = TModel::Nc;
-    const double PROBFLIP = 0.25;
+    // const double PROBFLIP = 0.25;
     const double PROBINSERT = 0.25;
     const double PROBREMOVE = 1.0 - PROBINSERT;
 
@@ -71,19 +69,19 @@ class ABC_MarkovChain
     {
         return (*modelPtr_);
     };
-    Matrix_t Nup() const
+
+    Matrix_t N() const
     {
-        return nfdata_.Nup_;
+        return nfdata_.N_;
     };
-    Matrix_t Ndown() const
-    {
-        return nfdata_.Ndown_;
-    };
+
     std::vector<Vertex> vertices() const
     {
         return dataCT_->vertices_;
     };
+
     size_t updatesProposed() const { return updatesProposed_; }
+
     double beta() const
     {
         return dataCT_->beta_;
@@ -97,119 +95,23 @@ class ABC_MarkovChain
 
     void ThermalizeFromConfig()
     {
-        if (mpiUt::LoadConfig(dataCT_->vertices_))
-        {
-            const size_t kk = dataCT_->vertices_.size();
-            nfdata_.FVup_ = SiteVector_t(kk);
-            nfdata_.FVdown_ = SiteVector_t(kk);
-            for (size_t i = 0; i < kk; i++)
-            {
-                AuxSpin_t aux = dataCT_->vertices_.at(i).aux();
-                nfdata_.FVup_(i) = FAuxUp(aux);
-                nfdata_.FVdown_(i) = FAuxDown(aux);
-            }
-
-            nfdata_.Nup_.Resize(kk, kk);
-            nfdata_.Ndown_.Resize(kk, kk);
-            CleanUpdate();
-        }
+        assert(false);
     }
 
     void DoStep()
     {
 
-        if (urng_() < PROBFLIP)
-        {
-            FlipAux();
-        }
-        else
-        {
-            urng_() < PROBINSERT ? InsertVertex() : RemoveVertex();
-        }
+        urng_() < PROBINSERT ? InsertVertex() : RemoveVertex();
 
         updatesProposed_++;
-    }
-
-    void FlipAux()
-    {
-
-        if (dataCT_->vertices_.size())
-        {
-            updStats_["Flips"][0]++;
-            size_t p = static_cast<size_t>(dataCT_->vertices_.size() * urng_());
-            Vertex vertex = dataCT_->vertices_.at(p);
-            vertex.FlipAux();
-            AuxSpin_t auxTo = vertex.aux();
-            AuxSpin_t auxFrom = dataCT_->vertices_.at(p).aux();
-
-            double fauxup = nfdata_.FVup_(p);
-            double fauxdown = nfdata_.FVdown_(p);
-            double fauxupM1 = fauxup - 1.0;
-            double fauxdownM1 = fauxdown - 1.0;
-            double gammakup = gammaUpTrad(auxTo, auxFrom);
-            double gammakdown = gammaDownTrad(auxTo, auxFrom);
-
-            double ratioUp = 1.0 + (1.0 - (nfdata_.Nup_(p, p) * fauxup - 1.0) / (fauxupM1)) * gammakup;
-            double ratioDown = 1.0 + (1.0 - (nfdata_.Ndown_(p, p) * fauxdown - 1.0) / (fauxdownM1)) * gammakdown;
-
-            double probAcc = ratioUp * ratioDown;
-
-            if (urng_() < std::abs(probAcc))
-            {
-                updStats_["Flips"][1]++;
-                if (probAcc < 0.0)
-                {
-                    dataCT_->sign_ *= -1;
-                }
-
-                //AssertSizes();
-                const size_t kk = dataCT_->vertices_.size();
-                double lambdaUp = gammakup / ratioUp;
-                double lambdaDown = gammakdown / ratioDown;
-
-                SiteVector_t rowpUp;
-                SiteVector_t colpUp;
-                LinAlg::ExtractRow(p, rowpUp, nfdata_.Nup_);
-                LinAlg::ExtractCol(p, colpUp, nfdata_.Nup_);
-
-                SiteVector_t rowpDown;
-                SiteVector_t colpDown;
-                LinAlg::ExtractRow(p, rowpDown, nfdata_.Ndown_);
-                LinAlg::ExtractCol(p, colpDown, nfdata_.Ndown_);
-
-                for (size_t j = 0; j < kk; j++)
-                {
-                    for (size_t i = 0; i < kk; i++)
-                    {
-                        if (i != p)
-                        {
-                            nfdata_.Nup_(i, j) += (colpUp(i) * fauxup / fauxupM1) * lambdaUp * rowpUp(j);
-                            nfdata_.Ndown_(i, j) += (colpDown(i) * fauxdown / fauxdownM1) * lambdaDown * rowpDown(j);
-                        }
-                        else
-                        {
-                            nfdata_.Nup_(i, j) += (((colpUp(i) * fauxup - 1.0) / fauxupM1) - 1.0) * lambdaUp * rowpUp(j);
-                            nfdata_.Ndown_(i, j) += (((colpDown(i) * fauxdown - 1.0) / fauxdownM1) - 1.0) * lambdaDown * rowpDown(j);
-                        }
-                    }
-                }
-
-                dataCT_->vertices_.at(p) = vertex;
-                nfdata_.FVup_(p) = fauxdown;
-                nfdata_.FVdown_(p) = fauxup;
-
-                //AssertSizes();
-            }
-        }
     }
 
     void AssertSizes()
     {
         const size_t kk = dataCT_->vertices_.size();
-        assert(kk == nfdata_.Nup_.n_rows());
-        assert(kk == nfdata_.Nup_.n_cols());
-        assert(kk == nfdata_.Ndown_.n_rows());
-        assert(kk == nfdata_.Ndown_.n_cols());
+        assert(2 * kk == nfdata_.N_.n_rows());
+        assert(2 * kk == nfdata_.N_.n_cols());
+        assert(2 * kk == nfdata_.F_.n_elem());
     }
 
     void InsertVertex()
@@ -217,19 +119,19 @@ class ABC_MarkovChain
         //AssertSizes();
         updStats_["Inserts"][0]++;
         Vertex vertex = Vertex(dataCT_->beta_ * urng_(), static_cast<Site_t>(Nc * urng_()), urng_() < 0.5 ? AuxSpin_t::Up : AuxSpin_t::Down);
-        double fauxup = FAuxUp(vertex.aux());
-        double fauxdown = FAuxDown(vertex.aux());
-        double fauxupM1 = fauxup - 1.0;
-        double fauxdownM1 = fauxdown - 1.0;
+        const double fauxup = FAuxUp(vertex.aux());
+        const double fauxdown = FAuxDown(vertex.aux());
+        const double fauxupM1 = fauxup - 1.0;
+        const double fauxdownM1 = fauxdown - 1.0;
 
-        double sUp = fauxup - GetGreenTau0Up(vertex, vertex) * fauxupM1;
-        double sDown = fauxdown - GetGreenTau0Down(vertex, vertex) * fauxdownM1;
+        const double sUp = fauxup - GetGreenTau0Up(vertex, vertex) * fauxupM1;
+        const double sDown = fauxdown - GetGreenTau0Down(vertex, vertex) * fauxdownM1;
 
         if (dataCT_->vertices_.size())
         {
             //AssertSizes();
             const size_t kkold = dataCT_->vertices_.size();
-            const size_t kknew = kkold + 1;
+            const size_t kknew = kkold + 2;
 
             SiteVector_t newLastColUp_(kkold);
             SiteVector_t newLastRowUp_(kkold);
@@ -257,10 +159,9 @@ class ABC_MarkovChain
             sTildeDownI -= LinAlg::DotVectors(newLastRowDown_, NQDown);
 
             const double ratio = sTildeUpI * sTildeDownI;
-            double probAcc = KAux() / kknew * ratio;
-            probAcc *= PROBREMOVE / PROBINSERT;
+            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() / kknew * ratio;
             //AssertSizes();
-            if (urng_() < std::abs(probAcc))
+            if (urng_() < std::abs(ratioAcc))
             {
                 updStats_["Inserts"][1]++;
                 if (probAcc < .0)
@@ -268,12 +169,11 @@ class ABC_MarkovChain
                     dataCT_->sign_ *= -1;
                 }
 
-                LinAlg::BlockRankOneUpgrade(nfdata_.Nup_, NQUp, newLastRowUp_, 1.0 / sTildeUpI);
-                LinAlg::BlockRankOneUpgrade(nfdata_.Ndown_, NQDown, newLastRowDown_, 1.0 / sTildeDownI);
-                nfdata_.FVup_.resize(kknew);
-                nfdata_.FVdown_.resize(kknew);
-                nfdata_.FVup_(kkold) = fauxup;
-                nfdata_.FVdown_(kkold) = fauxdown;
+                LinAlg::BlockRankOneTwoUpgrade(nfdata_.Nup_, NQUp, newLastRowUp_, 1.0 / sTildeUpI);
+                LinAlg::BlockRankOneTwoUpgrade(nfdata_.Ndown_, NQDown, newLastRowDown_, 1.0 / sTildeDownI);
+                nfdata_.F_.resize(kknew);
+                nfdata_.F_(kkold) = fauxup;
+                nfdata_.F_(kkold + 1) = fauxdown;
                 dataCT_->vertices_.push_back(vertex);
                 //AssertSizes();
             }
@@ -281,24 +181,20 @@ class ABC_MarkovChain
         else
         {
             //AssertSizes();
-            double probAcc = KAux() * sUp * sDown;
-            probAcc *= PROBREMOVE / PROBINSERT;
-            if (urng_() < std::abs(probAcc))
+            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() * sUp * sDown;
+            if (urng_() < std::abs(ratioAcc))
             {
-                if (probAcc < .0)
+                if (ratioAcc < .0)
                 {
                     dataCT_->sign_ *= -1;
                 }
 
-                nfdata_.Nup_ = Matrix_t(1, 1);
-                nfdata_.Ndown_ = Matrix_t(1, 1);
-                nfdata_.Nup_(0, 0) = 1.0 / sUp;
-                nfdata_.Ndown_(0, 0) = 1.0 / sDown;
+                nfdata_.N_ = {{1.0 / sUp, 0.0},
+                              {0.0, 1.0 / sDown}};
 
-                nfdata_.FVup_ = SiteVector_t(1);
-                nfdata_.FVdown_ = SiteVector_t(1);
-                nfdata_.FVup_(0) = fauxup;
-                nfdata_.FVdown_(0) = fauxdown;
+                nfdata_.F_ = SiteVector_t(2);
+                nfdata_.F_(0) = fauxup;
+                nfdata_.F_(1) = fauxdown;
 
                 dataCT_->vertices_.push_back(vertex);
             }
@@ -394,13 +290,14 @@ class ABC_MarkovChain
         return (dataCT_->green0CachedUp_(vertexI.site(), vertexJ.site(), vertexI.tau() - vertexJ.tau()));
     }
 
+    // In fact return -g_Down(-tau) (nambu version of gdown)
     double GetGreenTau0Down(const Vertex &vertexI, const Vertex &vertexJ) const
     {
 
 #ifdef AFM
-        return (dataCT_->green0CachedDown_(vertexI.site(), vertexJ.site(), vertexI.tau() - vertexJ.tau()));
+        return (-dataCT_->green0CachedDown_(vertexI.site(), vertexJ.site(), -(vertexI.tau() - vertexJ.tau())));
 #else
-        return GetGreenTau0Up(vertexI, vertexJ);
+        return (-dataCT_->green0CachedUp_(vertexI.site(), vertexJ.site(), -(vertexI.tau() - vertexJ.tau())));
 
 #endif
     }

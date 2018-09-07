@@ -112,6 +112,8 @@ class ABC_Model_2D
 #ifdef AFM
                 this->greenCluster0MatDown_ = GreenMat::GreenCluster0Mat(this->hybridizationMatDown_, this->tLoc_, this->auxMu(), this->beta_);
 #endif
+
+                //For now, set the anormal parts to zero
         }
 
         virtual ~ABC_Model_2D() = 0;
@@ -122,10 +124,17 @@ class ABC_Model_2D
         double delta() const { return delta_; };
         double beta() const { return beta_; };
         ClusterMatrixCD_t tLoc() const { return tLoc_; };
+
         GreenMat::GreenCluster0Mat const greenCluster0MatUp() { return greenCluster0MatUp_; };
         GreenMat::GreenCluster0Mat const greenCluster0MatDown() { return greenCluster0MatDown_; };
         GreenMat::HybridizationMat const hybridizationMatUp() const { return hybridizationMatUp_; };
         GreenMat::HybridizationMat const hybridizationMatDown() const { return hybridizationMatDown_; };
+
+        GreenMat::GreenCluster0Mat const FAnromalCluster0MatUp() { return FAnormalCluster0MatUp_; };
+        GreenMat::GreenCluster0Mat const FAnromalCluster0MatDown() { return FAnormalCluster0MatDown_; };
+        GreenMat::HybridizationMat const hybridizationAnormalMatUp() const { return hybridizationAnormalMatUp_; };
+        GreenMat::HybridizationMat const hybridizationAnormalMatDown() const { return hybridizationAnormalMatDown_; };
+
         TH0 const h0() { return h0_; };
         TIOModel const ioModel() { return ioModel_; };
 
@@ -176,10 +185,17 @@ class ABC_Model_2D
 
       protected:
         TIOModel ioModel_;
+
         GreenMat::HybridizationMat hybridizationMatUp_;
         GreenMat::HybridizationMat hybridizationMatDown_;
         GreenMat::GreenCluster0Mat greenCluster0MatUp_;
         GreenMat::GreenCluster0Mat greenCluster0MatDown_;
+
+        GreenMat::HybridizationMat hybridizationAnormalMatUp_;
+        GreenMat::HybridizationMat hybridizationAnormalMatDown_;
+        GreenMat::GreenCluster0Mat FAnormalCluster0MatUp_;
+        GreenMat::GreenCluster0Mat FAnormalCluster0MatDown_;
+
         TH0 h0_;
 
         ClusterMatrixCD_t hybFM_;
