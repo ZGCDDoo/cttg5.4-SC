@@ -158,7 +158,6 @@ void DGEMM(const double &alpha, const double &beta, const Matrix_t &A,
     const size_t elemNum = ld_C * colNum;
     dgemm_(&no, &no, &n_rowsC, &n_colsC, &n_rowsB, &alpha, A.memptr(),
            &ld_A, B.memptr(), &ld_B, &beta, &(C.memptr()[elemNum]), &ld_C);
-    return;
 }
 
 Matrix_t DotRank2(const Matrix_t &m1, const Matrix_t &A, const Matrix_t &m2)
@@ -187,8 +186,6 @@ void TriangularSolve(const char &uplo, const char &trans, const Matrix_t &A, Sit
 
     dtrtrs_(&uplo, &trans, &diag, &N, &nrhs, A.memptr(), &ld_A, B.memptr(), &ldb, &info);
     assert(info == 0);
-    return;
-    // return 0;
 }
 
 void ExtractLU(const Matrix_t &LU, Matrix_t &L, Matrix_t &U)
@@ -208,7 +205,6 @@ void ExtractLU(const Matrix_t &LU, Matrix_t &L, Matrix_t &U)
     dlaset_(&up, &M, &M, &a, &b, L.memptr(), &ld_L);
     dlaset_(&lo, &M, &M, &a, &b, U.memptr(), &ld_U);
     dlacpy_(&up, &M, &M, LU.memptr(), &ld_LU, U.memptr(), &ld_U);
-    return;
 }
 
 void TriangularInverse(const char &uplo, Matrix_t &A)
@@ -222,8 +218,6 @@ void TriangularInverse(const char &uplo, Matrix_t &A)
 
     dtrtri_(&uplo, &diag, &N, A.memptr(), &ld_A, &info);
     assert(info == 0);
-    return;
-    // return 0;
 }
 
 void LUInverse(const double &alpha, Matrix_t &L, Matrix_t &U, const unsigned int &M)
@@ -242,8 +236,6 @@ void LUInverse(const double &alpha, Matrix_t &L, Matrix_t &U, const unsigned int
     const char trans = 'n';
     const char diag = 'u';
     dtrsm_(&side, &uplo, &trans, &diag, &M, &M, &alpha, L.memptr(), &ld_L, U.memptr(), &ld_U);
-
-    return;
 }
 
 //Upgrade the matrix if the last element of the inverse is known (STilde)
@@ -271,7 +263,6 @@ void BlockRankOneUpgrade(Matrix_t &mk, const SiteVector_t &mkQ, const SiteVector
     dcopy_(&k, &(QTilde.memptr()[0]), &inc, &(mk.memptr()[ld_mk_resized * k]), &inc);
 
     mk(k, k) = STilde;
-    return;
 }
 
 // Upgrade the matrix if the last matrix element of the inverse is known (STilde)
@@ -322,8 +313,6 @@ void BlockRankTwoUpgrade(Matrix_t &mk, const Matrix_t &Q, const Matrix_t &R, con
     mk(k, k + 1) = STilde(0, 1);
     mk(k + 1, k) = STilde(1, 0);
     mk(k + 1, k + 1) = STilde(1, 1);
-
-    return;
 }
 
 //pp row and col to remove

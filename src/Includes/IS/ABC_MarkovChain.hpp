@@ -111,12 +111,12 @@ class ABC_MarkovChain
         const size_t kk = dataCT_->vertices_.size();
         assert(2 * kk == nfdata_.N_.n_rows());
         assert(2 * kk == nfdata_.N_.n_cols());
-        assert(2 * kk == nfdata_.F_.n_elem());
+        assert(2 * kk == nfdata_.F_.n_elem);
     }
 
     void InsertVertex()
     {
-        //AssertSizes();
+        AssertSizes();
         updStats_["Inserts"][0]++;
         Vertex vertex = Vertex(dataCT_->beta_ * urng_(), static_cast<Site_t>(Nc * urng_()), urng_() < 0.5 ? AuxSpin_t::Up : AuxSpin_t::Down);
         const double fauxup = FAuxUp(vertex.aux());
@@ -124,43 +124,44 @@ class ABC_MarkovChain
         const double fauxupM1 = fauxup - 1.0;
         const double fauxdownM1 = fauxdown - 1.0;
 
-        const double sUp = fauxup - GetGreenTau0Up(vertex, vertex) * fauxupM1;
+        const double sUp = fauxup - GetGreenTau0Up(vertex, vertex) * fauxupM1; // The
         const double sDown = fauxdown - GetGreenTau0Down(vertex, vertex) * fauxdownM1;
 
         if (dataCT_->vertices_.size())
         {
-            //AssertSizes();
+            AssertSizes();
             const size_t kkold = dataCT_->vertices_.size();
             const size_t kknew = kkold + 2;
 
-            SiteVector_t newLastColUp_(kkold);
-            SiteVector_t newLastRowUp_(kkold);
-            SiteVector_t newLastColDown_(kkold);
-            SiteVector_t newLastRowDown_(kkold);
-
-            double sTildeUpI = sUp;
-            double sTildeDownI = sDown;
+            Matrix_t Q_(kkold, 2);
+            Matrix_t R_(2, kkold);
 
             //Probably put this in a method
             for (size_t i = 0; i < kkold; i++)
             {
-                newLastRowUp_(i) = -GetGreenTau0Up(vertex, dataCT_->vertices_.at(i)) * (nfdata_.FVup_(i) - 1.0);
-                newLastColUp_(i) = -GetGreenTau0Up(dataCT_->vertices_[i], vertex) * fauxupM1;
 
-                newLastRowDown_(i) = -GetGreenTau0Down(vertex, dataCT_->vertices_[i]) * (nfdata_.FVdown_(i) - 1.0);
-                newLastColDown_(i) = -GetGreenTau0Down(dataCT_->vertices_[i], vertex) * fauxdownM1;
+                //consider the vertices being numbered from one to L, then, for the jth vertex (we are adding the pth vertex):
+                Q_(2 * i, 0) = -GetGreenTau0Up(dataCT_->vertices_.at(2 * i), vertex) * (nfdata_.F_(2 * i) - 1.0);               // G^{Up, Up}_{j, p}
+                Q_(2 * i, 1) = 0.0;                                                                                             // F_{Up Down}_{j, p}
+                Q_(2 * i + 1, 0) = 0.0;                                                                                         // F_{Down, Up}_{j, p}
+                Q_(2 * i + 1, 1) = -GetGreenTau0Down(dataCT_->vertices_.at(2 * i + 1), vertex) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
+
+                R_(0, 2 * i) = -GetGreenTau0Up(vertex, dataCT_->vertices_.at(2 * i)) * (nfdata_.F_(2 * i) - 1.0);               // G^{Up, Up}_{p, j}
+                R_(0, 2 * i + 1) = 0.0;                                                                                         // F_{Up Down}_{j, p}
+                R_(1, 2 * i) = 0.0;                                                                                             // F_{Down, Up}_{j, p}
+                R_(1, 2 * i + 1) = -GetGreenTau0Down(vertex, dataCT_->vertices_.at(2 * i + 1)) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
             }
 
-            SiteVector_t NQUp(kkold); //NQ = N*Q
-            SiteVector_t NQDown(kkold);
-            MatrixVectorMult(nfdata_.Nup_, newLastColUp_, 1.0, NQUp);
-            MatrixVectorMult(nfdata_.Ndown_, newLastColDown_, 1.0, NQDown);
-            sTildeUpI -= LinAlg::DotVectors(newLastRowUp_, NQUp);
-            sTildeDownI -= LinAlg::DotVectors(newLastRowDown_, NQDown);
+            //Watch out, we are calculating two times the matrix NQ, once here and once in ranktwoupgrade. In a next version, only calculate here, not in ranktwoupgrade.
+            // Matrix_t NQ(2 * kkold, 2); //NQ = N*Q
+            // MatrixVectorMult(nfdata_.N_, Q_, 1.0, NQUp);
 
-            const double ratio = sTildeUpI * sTildeDownI;
-            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() / kknew * ratio;
-            //AssertSizes();
+            // Matrix_t RNQ(2, 2); //R*NQ
+            Matrix_t sTilde = Matrix_t({{sUp, 0.0}, {0.0, sDown}}) - LinAlg::DotRank2(R_, nfdata_.N_, Q_);
+            sTilde.Inverse();
+            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() / kknew * 1.0 / sTilde.Determinant();
+
+            AssertSizes();
             if (urng_() < std::abs(ratioAcc))
             {
                 updStats_["Inserts"][1]++;
@@ -169,110 +170,108 @@ class ABC_MarkovChain
                     dataCT_->sign_ *= -1;
                 }
 
-                LinAlg::BlockRankOneTwoUpgrade(nfdata_.Nup_, NQUp, newLastRowUp_, 1.0 / sTildeUpI);
-                LinAlg::BlockRankOneTwoUpgrade(nfdata_.Ndown_, NQDown, newLastRowDown_, 1.0 / sTildeDownI);
+                LinAlg::BlockRankTwoUpgrade(nfdata_.N_, Q_, R_, sTilde);
                 nfdata_.F_.resize(kknew);
                 nfdata_.F_(kkold) = fauxup;
                 nfdata_.F_(kkold + 1) = fauxdown;
                 dataCT_->vertices_.push_back(vertex);
-                //AssertSizes();
+                AssertSizes();
             }
         }
         else
         {
-            //AssertSizes();
-            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() * sUp * sDown;
-            if (urng_() < std::abs(ratioAcc))
-            {
-                if (ratioAcc < .0)
-                {
-                    dataCT_->sign_ *= -1;
-                }
+            AssertSizes();
+            // const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() * sUp * sDown;
+            //     if (urng_() < std::abs(ratioAcc))
+            //     {
+            //         if (ratioAcc < .0)
+            //         {
+            //             dataCT_->sign_ *= -1;
+            //         }
 
-                nfdata_.N_ = {{1.0 / sUp, 0.0},
-                              {0.0, 1.0 / sDown}};
+            //         nfdata_.N_ = {{1.0 / sUp, 0.0},
+            //                       {0.0, 1.0 / sDown}};
 
-                nfdata_.F_ = SiteVector_t(2);
-                nfdata_.F_(0) = fauxup;
-                nfdata_.F_(1) = fauxdown;
+            //         nfdata_.F_ = SiteVector_t(2);
+            //         nfdata_.F_(0) = fauxup;
+            //         nfdata_.F_(1) = fauxdown;
 
-                dataCT_->vertices_.push_back(vertex);
-            }
-            //AssertSizes();
+            //         dataCT_->vertices_.push_back(vertex);
+            //     }
+            AssertSizes();
         }
 
-        return;
+        // return;
     }
 
-    void
-    RemoveVertex()
+    void RemoveVertex()
     {
-        //AssertSizes();
-        updStats_["Removes"][0]++;
-        if (dataCT_->vertices_.size())
-        {
-            const size_t pp = static_cast<int>(urng_() * dataCT_->vertices_.size());
+        // //AssertSizes();
+        // updStats_["Removes"][0]++;
+        // if (dataCT_->vertices_.size())
+        // {
+        //     const size_t pp = static_cast<int>(urng_() * dataCT_->vertices_.size());
 
-            const double ratioAcc = PROBINSERT / PROBREMOVE * double{dataCT_->vertices_.size()} / KAux() * nfdata_.Nup_(pp, pp) * nfdata_.Ndown_(pp, pp);
+        //     const double ratioAcc = PROBINSERT / PROBREMOVE * double{dataCT_->vertices_.size()} / KAux() * nfdata_.Nup_(pp, pp) * nfdata_.Ndown_(pp, pp);
 
-            if (urng_() < std::abs(ratioAcc))
-            {
-                //AssertSizes();
-                updStats_["Removes"][1]++;
-                if (ratioAcc < 0.0)
-                {
-                    dataCT_->sign_ *= -1;
-                }
+        //     if (urng_() < std::abs(ratioAcc))
+        //     {
+        //         //AssertSizes();
+        //         updStats_["Removes"][1]++;
+        //         if (ratioAcc < 0.0)
+        //         {
+        //             dataCT_->sign_ *= -1;
+        //         }
 
-                //The update matrices of size k-1 x k-1 with the pp row and col deleted and the last row and col now at index pp
+        //         //The update matrices of size k-1 x k-1 with the pp row and col deleted and the last row and col now at index pp
 
-                const size_t kk = dataCT_->vertices_.size();
-                const size_t kkm2 = kk - 2;
+        //         const size_t kk = dataCT_->vertices_.size();
+        //         const size_t kkm2 = kk - 2;
 
-                LinAlg::BlockRankTwoDowngrade(nfdata_.Nup_, 2 * pp);
-                LinAlg::BlockRankTwoDowngrade(nfdata_.Ndown_, 2 * pp);
+        //         LinAlg::BlockRankTwoDowngrade(nfdata_.Nup_, 2 * pp);
+        //         LinAlg::BlockRankTwoDowngrade(nfdata_.Ndown_, 2 * pp);
 
-                nfdata_.FV_.swap_rows(pp, kk - 1);
-                nfdata_.FV_.swap_rows(pp + 1, kk);
-                nfdata_.FV_.resize(kkm2);
+        //         nfdata_.FV_.swap_rows(pp, kk - 1);
+        //         nfdata_.FV_.swap_rows(pp + 1, kk);
+        //         nfdata_.FV_.resize(kkm2);
 
-                std::iter_swap(dataCT_->vertices_.begin() + pp, dataCT_->vertices_.begin() + kk - 1);
-                dataCT_->vertices_.pop_back();
-                //AssertSizes();
-            }
-        }
+        //         std::iter_swap(dataCT_->vertices_.begin() + pp, dataCT_->vertices_.begin() + kk - 1);
+        //         dataCT_->vertices_.pop_back();
+        //         //AssertSizes();
+        //     }
+        // }
     }
 
     void CleanUpdate(bool print = false)
     {
-        //mpiUt::Print("Cleaning, sign, k =  " + std::to_string(dataCT_->sign_) + ",  " + std::to_string(dataCT_->vertices_.size()));
-        const size_t kk = dataCT_->vertices_.size();
-        if (kk == 0)
-        {
-            return;
-        }
+        // //mpiUt::Print("Cleaning, sign, k =  " + std::to_string(dataCT_->sign_) + ",  " + std::to_string(dataCT_->vertices_.size()));
+        // const size_t kk = dataCT_->vertices_.size();
+        // if (kk == 0)
+        // {
+        //     return;
+        // }
 
-        //AssertSizes();
-        for (size_t i = 0; i < kk; i++)
-        {
-            for (size_t j = 0; j < kk; j++)
-            {
+        // //AssertSizes();
+        // for (size_t i = 0; i < kk; i++)
+        // {
+        //     for (size_t j = 0; j < kk; j++)
+        //     {
 
-                nfdata_.N_(2 * i, 2 * j) = -GetGreenTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)) * (nfdata_.FV_(2 * j) - 1.0);               //Up Up Normal
-                nfdata_.N_(2 * i, 2 * j + 1) = -GetFTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));                                            //Up Down Anormal
-                nfdata_.N_(2 * i + 1, 2 * j) = -GetFTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));                                            //Down Up Anormal
-                nfdata_.N_(2 * i + 1, 2 * j + 1) = -GetGreenTau0Down(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)) * (nfdata_.FV_(2 * j + 1) - 1.0); //Down Down Normal
+        //         nfdata_.N_(2 * i, 2 * j) = -GetGreenTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)) * (nfdata_.FV_(2 * j) - 1.0);               //Up Up Normal
+        //         nfdata_.N_(2 * i, 2 * j + 1) = -GetFTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));                                            //Up Down Anormal
+        //         nfdata_.N_(2 * i + 1, 2 * j) = -GetFTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));                                            //Down Up Anormal
+        //         nfdata_.N_(2 * i + 1, 2 * j + 1) = -GetGreenTau0Down(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)) * (nfdata_.FV_(2 * j + 1) - 1.0); //Down Down Normal
 
-                if (i == j)
-                {
-                    nfdata_.N_(2 * i, 2 * i) += nfdata_.FV_(2 * i);
-                    nfdata_.N_(2 * i + 1, 2 * i + 1) += nfdata_.FV_(2 * i + 1);
-                }
-            }
-        }
-        //AssertSizes();
+        //         if (i == j)
+        //         {
+        //             nfdata_.N_(2 * i, 2 * i) += nfdata_.FV_(2 * i);
+        //             nfdata_.N_(2 * i + 1, 2 * i + 1) += nfdata_.FV_(2 * i + 1);
+        //         }
+        //     }
+        // }
+        // //AssertSizes();
 
-        nfdata_.N_.Inverse();
+        // nfdata_.N_.Inverse();
     }
 
     double GetGreenTau0Up(const Vertex &vertexI, const Vertex &vertexJ) const

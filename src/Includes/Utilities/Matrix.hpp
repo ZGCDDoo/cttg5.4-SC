@@ -306,6 +306,12 @@ class Matrix
 
     void Inverse();
 
+    T Determinant()
+    {
+        mat_.resize(n_rows_, n_cols_);
+        return arma::det(mat_);
+    }
+
   private:
     size_t n_rows_; //the real size of the matrix
     size_t n_cols_;
