@@ -1,0 +1,16 @@
+[
+    {
+        "Irreps": ["Up"],
+        "Flavors": [["Up"]],
+        "Matrix": [["+A+"]]
+    },
+    {
+        "Irreps": ["Down"],
+        "Flavors": [["Down"]],
+        "Matrix": [["+A+"]]
+    }
+]
+
+
+
+

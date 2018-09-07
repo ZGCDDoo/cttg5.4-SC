@@ -1,0 +1,18 @@
+{
+    "InsertEraseCSQ": {
+        "Weight": 1.,
+        "Moves": [
+            [1., "00Up"],
+            [1., "Pi0Up"],
+            [1., "0PiUp"],
+            [1., "PiPiUp"], 
+            [1., "00Down"],
+            [1., "Pi0Down"],
+            [1., "0PiDown"],
+            [1., "PiPiDown"]
+        ]
+    }
+}
+
+
+

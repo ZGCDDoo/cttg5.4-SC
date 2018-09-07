@@ -1,0 +1,50 @@
+[
+    {
+        "Irreps": ["A1Up"],
+        "Flavors": [["A1_1Up", "A1_2Up"]],
+        "Matrix": [
+            ["+A1_11+", "+A1_12+"],
+            ["+A1_12+", "+A1_22+"]
+        ]
+    },
+    {
+        "Irreps": ["B1Up"],
+        "Flavors": [["B1Up"]],
+        "Matrix": [
+            ["+B1+"]
+        ]
+    },
+    {
+        "Irreps": ["B2Up"],
+        "Flavors": [["B2Up"]],
+        "Matrix": [
+            ["+B2+"]
+        ]
+    },
+    {
+        "Irreps": ["A1Down"],
+        "Flavors": [["A1_1Down", "A1_2Down"]],
+        "Matrix": [
+            ["+A1_11+", "+A1_12+"],
+            ["+A1_12+", "+A1_22+"]
+        ]
+    },
+    {
+        "Irreps": ["B1Down"],
+        "Flavors": [["B1Down"]],
+        "Matrix": [
+            ["+B1+"]
+        ]
+    },
+    {
+        "Irreps": ["B2Down"],
+        "Flavors": [["B2Down"]],
+        "Matrix": [
+            ["+B2+"]
+        ]
+    }
+]
+
+
+
+

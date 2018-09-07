@@ -1,0 +1,23 @@
+{
+    "ATOMIC" : "Atomic.json",
+    "CLEAN_EVERY_SWEEP" : 5000,
+    "EGreen" : 30,
+    "EHyb" : 30,
+    "EObs" : 30,
+    "HYB" : "Hyb41.json",
+    "LINK" : "Link.json",
+    "MEASUREMENT_TIME" : 30,
+    "OBS" : "Obs.json",
+    "PROB" : 0.5,
+    "S" : 1,
+    "SAMPLE_EVERY_SWEEP" : 50,
+    "SEED" : 43341,
+    "STORE_EVERY_SAMPLE" : 100,
+    "THERMALIZATION_TIME" : 5,
+    "U" : 14,
+    "UPD" : "Updates.json",
+    "beta" : 16.67,
+    "mu" : 2.31,
+    "weightI" : 0,
+    "weightR" : 0
+}

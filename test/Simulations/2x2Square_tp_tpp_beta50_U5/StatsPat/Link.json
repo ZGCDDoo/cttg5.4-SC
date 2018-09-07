@@ -1,0 +1,46 @@
+[
+    {
+        "Irreps": ["00Up"],
+        "Flavors": [["00Up"]],
+        "Matrix": [["+00+"]]
+    },
+    {
+        "Irreps": ["Pi0Up"],
+        "Flavors": [["Pi0Up"]],
+        "Matrix": [["+0Pi+"]]
+    },
+    {
+        "Irreps": ["0PiUp"],
+        "Flavors": [["0PiUp"]],
+        "Matrix": [["+0Pi+"]]
+    },
+    {
+        "Irreps": ["PiPiUp"],
+        "Flavors": [["PiPiUp"]],
+        "Matrix": [["+PiPi+"]]
+    },
+    {
+        "Irreps": ["00Down"],
+        "Flavors": [["00Down"]],
+        "Matrix": [["+00+"]]
+    },
+    {
+        "Irreps": ["Pi0Down"],
+        "Flavors": [["Pi0Down"]],
+        "Matrix": [["+0Pi+"]]
+    },
+    {
+        "Irreps": ["0PiDown"],
+        "Flavors": [["0PiDown"]],
+        "Matrix": [["+0Pi+"]]
+    },
+    {
+        "Irreps": ["PiPiDown"],
+        "Flavors": [["PiPiDown"]],
+        "Matrix": [["+PiPi+"]]
+    }
+]
+
+
+
+

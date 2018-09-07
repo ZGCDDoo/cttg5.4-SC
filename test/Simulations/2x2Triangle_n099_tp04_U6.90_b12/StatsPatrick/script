@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -q qwork@ms
+#PBS -l walltime=120:00:00
+#PBS -l nodes=2:ppn=8
+#PBS -j oe
+cd ${PBS_O_WORKDIR}
+NSLOTS=`wc -l < $PBS_NODEFILE`
+
+IS_DIR=/mnt/parallel_scratch_ms2_wipe_on_april_2017/tremblay/hebertc1/PourCharlesDavid/ImpuritySolver
+SC_DIR=/mnt/parallel_scratch_ms2_wipe_on_april_2017/tremblay/hebertc1/PourCharlesDavid/SelfConsistencies/AnisotropicPlaquetteC2v
+
+ITER=1
+ITERMAX=7500
+
+if [ -a logfile ]
+  then rm logfile
+fi
+if [ $ITER -eq 0 ]
+then
+  parameter2xml params$ITER
+  $SC_DIR/CDMFT params $ITER
+  ITER=$[$ITER+1]
+fi
+while [ $ITER -le $ITERMAX ]
+do
+  echo begin iteration ${ITER} at: `date` >> logfile
+  parameter2xml params${ITER}
+  $SC_DIR/GA params${ITER}
+  mpirun -np $NSLOTS -machinefile $PBS_NODEFILE $IS_DIR/IS_MPI params${ITER}.in.xml
+  $SC_DIR/CDMFT params ${ITER}
+  rm params*.task1.out.run*
+  echo end iteration ${ITER} at: `date` >> logfile
+  ITER=$[$ITER+1]
+done
+

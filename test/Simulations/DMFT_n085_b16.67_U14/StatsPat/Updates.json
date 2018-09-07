@@ -1,0 +1,10 @@
+{
+    "InsertEraseCSQ": {
+        "Weight": 1.,
+        "Moves": [
+            [1., "Up"],
+            [1., "Down"]
+		]
+    }
+}
+

@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -q qwork@ms
+#PBS -l walltime=48:00:00
+#PBS -l nodes=16:ppn=8
+#PBS -j oe
+cd ${PBS_O_WORKDIR}
+NSLOTS=`wc -l < $PBS_NODEFILE`
+
+IS_DIR=/home/hebertc1/LazySkipList10.6/ImpuritySolver
+SC_DIR=/home/hebertc1/LazySkipList10.6/SelfConsistencies/AnisotropicPlaquetteC2vAFM
+
+ITER=2
+ITERMAX=300
+
+if [ -a logfile ]
+  then rm logfile
+fi
+if [ $ITER -eq 0 ]
+then
+  parameter2xml params$ITER
+  $SC_DIR/CDMFT params $ITER
+  ITER=$[$ITER+1]
+fi
+while [ $ITER -le $ITERMAX ]
+do
+  echo begin iteration ${ITER} at: `date` >> logfile
+  parameter2xml params${ITER}
+  $SC_DIR/GA params${ITER}
+  mpirun -np $NSLOTS -machinefile $PBS_NODEFILE $IS_DIR/IS_MPI params${ITER}.in.xml
+  $SC_DIR/CDMFT params ${ITER}
+  rm params*.task1.out.run*
+  echo end iteration ${ITER} at: `date` >> logfile
+  ITER=$[$ITER+1]
+done
+

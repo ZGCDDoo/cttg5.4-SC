@@ -1,0 +1,72 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build default",
+            "type": "shell",
+            "command": "rm -rf build* && mkdir build && cd build && cmake .. && make -j 4",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "build no tests",
+            "type": "shell",
+            "command": "rm -rf build* && mkdir build && cd build && cmake -DTEST=OFF .. && make -j 4",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "install",
+            "type": "shell",
+            "command": "rm -rf build* && mkdir build && cd build && cmake .. && make -j 4 install",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "install MPI",
+            "type": "shell",
+            "command": "rm -rf build_mpi && mkdir build_mpi && cd build_mpi && cmake -DMPI_BUILD=ON -DTEST=OFF .. && make -j 4 install",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "test default",
+            "type": "shell",
+            "command": "cd build && rm *arma *json *dat ; cmake .. && bash ../test.sh",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        }
+    ]
+}
