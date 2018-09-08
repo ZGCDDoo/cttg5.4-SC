@@ -4,6 +4,10 @@
 #include "../Utilities/Integrator.hpp"
 #include "../Utilities/Conventions.hpp"
 
+#ifdef DCA
+#include "../Utilities/Fourier_DCA.hpp"
+#endif
+
 namespace Models
 {
 

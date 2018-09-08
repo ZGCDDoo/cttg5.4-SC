@@ -181,23 +181,23 @@ class ABC_MarkovChain
         else
         {
             AssertSizes();
-            // const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() * sUp * sDown;
-            //     if (urng_() < std::abs(ratioAcc))
-            //     {
-            //         if (ratioAcc < .0)
-            //         {
-            //             dataCT_->sign_ *= -1;
-            //         }
+            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() * sUp * sDown;
+            if (urng_() < std::abs(ratioAcc))
+            {
+                if (ratioAcc < 0.0)
+                {
+                    dataCT_->sign_ *= -1;
+                }
 
-            //         nfdata_.N_ = {{1.0 / sUp, 0.0},
-            //                       {0.0, 1.0 / sDown}};
+                nfdata_.N_ = {{1.0 / sUp, 0.0},
+                              {0.0, 1.0 / sDown}};
 
-            //         nfdata_.F_ = SiteVector_t(2);
-            //         nfdata_.F_(0) = fauxup;
-            //         nfdata_.F_(1) = fauxdown;
+                nfdata_.F_ = SiteVector_t(2);
+                nfdata_.F_(0) = fauxup;
+                nfdata_.F_(1) = fauxdown;
 
-            //         dataCT_->vertices_.push_back(vertex);
-            //     }
+                dataCT_->vertices_.push_back(vertex);
+            }
             AssertSizes();
         }
 
