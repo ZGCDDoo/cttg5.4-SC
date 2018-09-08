@@ -116,6 +116,8 @@ class ABC_MarkovChain
 
     void InsertVertex()
     {
+        std::cout << "In insertvertex" << std::endl;
+
         AssertSizes();
         updStats_["Inserts"][0]++;
         Vertex vertex = Vertex(dataCT_->beta_ * urng_(), static_cast<Site_t>(Nc * urng_()), urng_() < 0.5 ? AuxSpin_t::Up : AuxSpin_t::Down);
@@ -133,24 +135,27 @@ class ABC_MarkovChain
             const size_t kkold = dataCT_->vertices_.size();
             const size_t kknew = kkold + 2;
 
-            Matrix_t Q_(kkold, 2);
-            Matrix_t R_(2, kkold);
+            Matrix_t Q_(2 * kkold, 2);
+            Matrix_t R_(2, 2 * kkold);
 
             //Probably put this in a method
+
+            std::cout << "In INsertvertex before loop " << std::endl;
             for (size_t i = 0; i < kkold; i++)
             {
 
                 //consider the vertices being numbered from one to L, then, for the jth vertex (we are adding the pth vertex):
-                Q_(2 * i, 0) = -GetGreenTau0Up(dataCT_->vertices_.at(2 * i), vertex) * (nfdata_.F_(2 * i) - 1.0);               // G^{Up, Up}_{j, p}
-                Q_(2 * i, 1) = 0.0;                                                                                             // F_{Up Down}_{j, p}
-                Q_(2 * i + 1, 0) = 0.0;                                                                                         // F_{Down, Up}_{j, p}
-                Q_(2 * i + 1, 1) = -GetGreenTau0Down(dataCT_->vertices_.at(2 * i + 1), vertex) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
+                Q_(2 * i, 0) = -GetGreenTau0Up(dataCT_->vertices_.at(i), vertex) * (nfdata_.F_(2 * i) - 1.0);           // G^{Up, Up}_{j, p}
+                Q_(2 * i, 1) = 0.0;                                                                                     // F_{Up Down}_{j, p}
+                Q_(2 * i + 1, 0) = 0.0;                                                                                 // F_{Down, Up}_{j, p}
+                Q_(2 * i + 1, 1) = -GetGreenTau0Down(dataCT_->vertices_.at(i), vertex) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
 
-                R_(0, 2 * i) = -GetGreenTau0Up(vertex, dataCT_->vertices_.at(2 * i)) * (nfdata_.F_(2 * i) - 1.0);               // G^{Up, Up}_{p, j}
-                R_(0, 2 * i + 1) = 0.0;                                                                                         // F_{Up Down}_{j, p}
-                R_(1, 2 * i) = 0.0;                                                                                             // F_{Down, Up}_{j, p}
-                R_(1, 2 * i + 1) = -GetGreenTau0Down(vertex, dataCT_->vertices_.at(2 * i + 1)) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
+                R_(0, 2 * i) = -GetGreenTau0Up(vertex, dataCT_->vertices_.at(i)) * (nfdata_.F_(2 * i) - 1.0);           // G^{Up, Up}_{p, j}
+                R_(0, 2 * i + 1) = 0.0;                                                                                 // F_{Up Down}_{j, p}
+                R_(1, 2 * i) = 0.0;                                                                                     // F_{Down, Up}_{j, p}
+                R_(1, 2 * i + 1) = -GetGreenTau0Down(vertex, dataCT_->vertices_.at(i)) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
             }
+            std::cout << "In INsertvertex After loop " << std::endl;
 
             //Watch out, we are calculating two times the matrix NQ, once here and once in ranktwoupgrade. In a next version, only calculate here, not in ranktwoupgrade.
             // Matrix_t NQ(2 * kkold, 2); //NQ = N*Q
@@ -171,7 +176,7 @@ class ABC_MarkovChain
                 }
 
                 LinAlg::BlockRankTwoUpgrade(nfdata_.N_, Q_, R_, sTilde);
-                nfdata_.F_.resize(kknew);
+                nfdata_.F_.resize(kkold + 2);
                 nfdata_.F_(kkold) = fauxup;
                 nfdata_.F_(kkold + 1) = fauxdown;
                 dataCT_->vertices_.push_back(vertex);
@@ -201,7 +206,7 @@ class ABC_MarkovChain
             AssertSizes();
         }
 
-        // return;
+        std::cout << "After insertvertex" << std::endl;
     }
 
     void RemoveVertex()
