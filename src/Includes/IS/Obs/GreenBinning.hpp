@@ -77,13 +77,16 @@ class GreenBinning
 
     ClusterCubeCD_t FinalizeGreenBinning(const double &signMeas, const size_t &NMeas)
     {
+        using arma::span;
+
         mpiUt::Print("Start of GreenBinning.FinalizeGreenBinning()");
 
         const double dTau = dataCT_->beta_ / N_BIN_TAU;
-        SiteVectorCD_t indep_M_matsubara_sampled(ioModel_.indepSites().size());
-        const ClusterCubeCD_t green0CubeMatsubara = spin_ == FermionSpin_t::Up ? modelPtr_->greenCluster0MatUp().data() : modelPtr_->greenCluster0MatDown().data();
-        ClusterCubeCD_t greenCube(ioModel_.Nc, ioModel_.Nc, NMat_);
-        greenCube.zeros();
+        const size_t LL = ioModel_.indepSites().size();
+        SiteVectorCD_t indep_M_matsubara_sampled(2 * LL);
+        const ClusterCubeCD_t greenNambu0 = modelPtr_->greenNambu0();
+        ClusterCubeCD_t greenNambu(2 * ioModel_.Nc, 2 * ioModel_.Nc, NMat_);
+        greenNambu.zeros();
 
         for (size_t n = 0; n < NMat_; n++)
         {
@@ -92,35 +95,36 @@ class GreenBinning
             const cd_t fact = std::exp(iomega_n * dTau);
             const double lambda = 2.0 * std::sin(omega_n * dTau / 2.0) / (dTau * omega_n * (1.0 - omega_n * omega_n * dTau * dTau / 24.0) * NMeas);
 
-            for (size_t ll = 0; ll < ioModel_.indepSites().size(); ll++)
+            for (size_t ll = 0; ll < LL; ll++)
             {
-                cd_t temp_matsubara = 0.0;
+                SiteVectorCD_t temp_matsubara(2 * LL);
+                temp_matsubara.zeros();
 
                 cd_t exp_factor = std::exp(iomega_n * dTau / 2.0) / (static_cast<double>(ioModel_.nOfAssociatedSites().at(ll))); //watch out important factor!
                 for (size_t ii = 0; ii < N_BIN_TAU; ii++)
                 {
-                    cd_t coeff = lambda * exp_factor;
+                    const cd_t coeff = lambda * exp_factor;
 
-                    temp_matsubara += coeff * M0Bins_.at(ll).at(ii);
-                    temp_matsubara += coeff * M1Bins_[ll][ii] * iomega_n;
-                    temp_matsubara += coeff * M2Bins_[ll][ii] * iomega_n * iomega_n / 2.0;
-                    temp_matsubara += coeff * M3Bins_[ll][ii] * iomega_n * iomega_n * iomega_n / 6.0;
+                    temp_matsubara += coeff * M0Bins_(span(0, 4), span(ll, ll), span(ii, ii));
+                    //             temp_matsubara += coeff * M1Bins_[ll][ii] * iomega_n;
+                    //             temp_matsubara += coeff * M2Bins_[ll][ii] * iomega_n * iomega_n / 2.0;
+                    //             temp_matsubara += coeff * M3Bins_[ll][ii] * iomega_n * iomega_n * iomega_n / 6.0;
 
-                    exp_factor *= fact;
+                    //             exp_factor *= fact;
                 }
-                indep_M_matsubara_sampled(ll) = temp_matsubara;
+                //         indep_M_matsubara_sampled(ll) = temp_matsubara;
             }
 
-            const ClusterMatrixCD_t dummy1 = ioModel_.IndepToFull(indep_M_matsubara_sampled);
-            const ClusterMatrixCD_t green0 = green0CubeMatsubara.slice(n);
+            //     const ClusterMatrixCD_t dummy1 = ioModel_.IndepToFull(indep_M_matsubara_sampled);
+            //     const ClusterMatrixCD_t green0 = green0CubeMatsubara.slice(n);
 
-            greenCube.slice(n) = green0 - green0 * dummy1 * green0 / (dataCT_->beta_ * signMeas);
+            //     greenCube.slice(n) = green0 - green0 * dummy1 * green0 / (dataCT_->beta_ * signMeas);
         }
 
-        greenCube_ = greenCube; //in case it is needed later on
+        // greenCube_ = greenCube; //in case it is needed later on
 
-        mpiUt::Print("End of GreenBinning.FinalizeGreenBinning()");
-        return greenCube; //the  measured interacting green function
+        // mpiUt::Print("End of GreenBinning.FinalizeGreenBinning()");
+        // return greenCube; //the  measured interacting green function
     }
 
   private:

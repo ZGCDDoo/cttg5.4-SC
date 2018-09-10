@@ -57,22 +57,22 @@ class Observables
 
         void Save()
         {
-                //                 mpiUt::Print("Start of Observables.Save()");
-                //                 signMeas_ /= NMeas_;
+                mpiUt::Print("Start of Observables.Save()");
+                signMeas_ /= NMeas_;
 
                 //                 fillingAndDocc_.Finalize(signMeas_, NMeas_);
-                //                 std::map<std::string, double> obsScal;
+                std::map<std::string, double> obsScal;
 
                 //                 obsScal = fillingAndDocc_.GetObs();
 
-                //                 obsScal["sign"] = signMeas_;
-                //                 obsScal["NMeas"] = NMeas_;
+                obsScal["sign"] = signMeas_;
+                obsScal["NMeas"] = NMeas_;
 
                 //                 //dont forget that the following obs have not been finalized (multiplied by following factor)
-                //                 const double fact = 1.0 / (NMeas_ * signMeas_);
-                //                 obsScal["k"] = fact * expOrder_;
+                const double fact = 1.0 / (NMeas_ * signMeas_);
+                obsScal["k"] = fact * expOrder_;
 
-                //                 ClusterMatrixCD_t greenMatsubaraUp = ioModel_.FullCubeToIndep(greenBinningUp_.FinalizeGreenBinning(signMeas_, NMeas_));
+                const ClusterMatrixCD_t greenNambu = ioModel_.FullCubeToIndep(greenBinning_.FinalizeGreenBinning(signMeas_, NMeas_));
                 // #ifdef AFM
                 //                 ClusterMatrixCD_t greenMatsubaraDown = ioModel_.FullCubeToIndep(greenBinningDown_.FinalizeGreenBinning(signMeas_, NMeas_));
 
