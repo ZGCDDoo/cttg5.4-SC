@@ -237,8 +237,8 @@ class ABC_MarkovChain
 
                 LinAlg::BlockDowngrade(nfdata_.N_, 2 * pp, 2);
 
-                nfdata_.F_.swap_rows(pp, 2 * kk - 2);
-                nfdata_.F_.swap_rows(pp + 1, 2 * kk - 1);
+                nfdata_.F_.swap_rows(2 * pp, 2 * kk - 2);
+                nfdata_.F_.swap_rows(2 * pp + 1, 2 * kk - 1);
                 nfdata_.F_.resize(2 * kkm1);
 
                 std::iter_swap(dataCT_->vertices_.begin() + pp, dataCT_->vertices_.begin() + kk - 1);
