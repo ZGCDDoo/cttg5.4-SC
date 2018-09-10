@@ -146,15 +146,16 @@ class ABC_MarkovChain
             {
 
                 //consider the vertices being numbered from one to L, then, for the jth vertex (we are adding the pth vertex):
-                Q_(2 * i, 0) = -GetGreenTau0Up(dataCT_->vertices_.at(i), vertex) * (nfdata_.F_(2 * i) - 1.0);           // G^{Up, Up}_{j, p}
-                Q_(2 * i, 1) = 0.0;                                                                                     // F_{Up Down}_{j, p}
-                Q_(2 * i + 1, 0) = 0.0;                                                                                 // F_{Down, Up}_{j, p}
-                Q_(2 * i + 1, 1) = -GetGreenTau0Down(dataCT_->vertices_.at(i), vertex) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
+                const Vertex vertexI = dataCT_->vertices_.at(i);
+                Q_(2 * i, 0) = -GetGreenTau0Up(vertexI, vertex) * (nfdata_.F_(2 * i) - 1.0);           // G^{Up, Up}_{j, p}
+                Q_(2 * i, 1) = -GetFTau0UpDown(vertexI, vertex);                                       // F_{Up Down}_{j, p}
+                Q_(2 * i + 1, 0) = -GetFTau0UpDown(vertexI, vertex);                                   // F_{Down, Up}_{j, p}
+                Q_(2 * i + 1, 1) = -GetGreenTau0Down(vertexI, vertex) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
 
-                R_(0, 2 * i) = -GetGreenTau0Up(vertex, dataCT_->vertices_.at(i)) * (nfdata_.F_(2 * i) - 1.0);           // G^{Up, Up}_{p, j}
-                R_(0, 2 * i + 1) = 0.0;                                                                                 // F_{Up Down}_{j, p}
-                R_(1, 2 * i) = 0.0;                                                                                     // F_{Down, Up}_{j, p}
-                R_(1, 2 * i + 1) = -GetGreenTau0Down(vertex, dataCT_->vertices_.at(i)) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
+                R_(0, 2 * i) = -GetGreenTau0Up(vertex, vertexI) * (nfdata_.F_(2 * i) - 1.0);           // G^{Up, Up}_{p, j}
+                R_(0, 2 * i + 1) = -GetFTau0UpDown(vertex, vertexI);                                   // F_{Up Down}_{j, p}
+                R_(1, 2 * i) = -GetFTau0DownUp(vertex, vertexI);                                       // F_{Down, Up}_{j, p}
+                R_(1, 2 * i + 1) = -GetGreenTau0Down(vertex, vertexI) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
             }
             std::cout << "In INsertvertex After loop " << std::endl;
 
