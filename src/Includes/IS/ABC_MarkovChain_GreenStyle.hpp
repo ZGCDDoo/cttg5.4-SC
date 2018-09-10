@@ -127,8 +127,8 @@ class ABC_MarkovChain
         const double fauxupM1 = fauxup - 1.0;
         const double fauxdownM1 = fauxdown - 1.0;
 
-        const double sUp = fauxup - GetGreenTau0Up(vertex, vertex) * fauxupM1; // The
-        const double sDown = fauxdown - GetGreenTau0Down(vertex, vertex) * fauxdownM1;
+        const double sUp = GetGreenTau0Up(vertex, vertex) - modelPtr_->auxUp(vertex.aux());
+        const double sDown = GetGreenTau0Down(vertex, vertex) - modelPtr_->auxDown(vertex.aux());
 
         if (dataCT_->vertices_.size())
         {
@@ -138,7 +138,7 @@ class ABC_MarkovChain
 
             Matrix_t Q_(2 * kkold, 2);
             Matrix_t R_(2, 2 * kkold);
-            if (kknew >= 30)
+            if (kknew >= 5)
                 return;
             //Probably put this in a method
 
@@ -148,15 +148,15 @@ class ABC_MarkovChain
 
                 //consider the vertices being numbered from one to L, then, for the jth vertex (we are adding the pth vertex):
                 const Vertex vertexI = dataCT_->vertices_.at(i);
-                Q_(2 * i, 0) = -GetGreenTau0Up(vertexI, vertex) * fauxupM1;         // G^{Up, Up}_{j, p}
-                Q_(2 * i, 1) = -GetFTau0UpDown(vertexI, vertex);                    // F_{Up Down}_{j, p}
-                Q_(2 * i + 1, 0) = -GetFTau0UpDown(vertexI, vertex);                // F_{Down, Up}_{j, p}
-                Q_(2 * i + 1, 1) = -GetGreenTau0Down(vertexI, vertex) * fauxdownM1; // G_{Down, Down}_{j, p}
+                Q_(2 * i, 0) = GetGreenTau0Up(vertexI, vertex);       // G^{Up, Up}_{j, p}
+                Q_(2 * i, 1) = GetFTau0UpDown(vertexI, vertex);       // F_{Up Down}_{j, p}
+                Q_(2 * i + 1, 0) = GetFTau0UpDown(vertexI, vertex);   // F_{Down, Up}_{j, p}
+                Q_(2 * i + 1, 1) = GetGreenTau0Down(vertexI, vertex); // G_{Down, Down}_{j, p}
 
-                R_(0, 2 * i) = -GetGreenTau0Up(vertex, vertexI) * (nfdata_.F_(2 * i) - 1.0);           // G^{Up, Up}_{p, j}
-                R_(0, 2 * i + 1) = -GetFTau0UpDown(vertex, vertexI);                                   // F_{Up Down}_{j, p}
-                R_(1, 2 * i) = -GetFTau0DownUp(vertex, vertexI);                                       // F_{Down, Up}_{j, p}
-                R_(1, 2 * i + 1) = -GetGreenTau0Down(vertex, vertexI) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
+                R_(0, 2 * i) = GetGreenTau0Up(vertex, vertexI);       // G^{Up, Up}_{p, j}
+                R_(0, 2 * i + 1) = GetFTau0UpDown(vertex, vertexI);   // F_{Up Down}_{j, p}
+                R_(1, 2 * i) = GetFTau0DownUp(vertex, vertexI);       // F_{Down, Up}_{j, p}
+                R_(1, 2 * i + 1) = GetGreenTau0Down(vertex, vertexI); // G_{Down, Down}_{j, p}
             }
             std::cout << "In INsertvertex After loop " << std::endl;
 
@@ -265,15 +265,15 @@ class ABC_MarkovChain
             for (size_t j = 0; j < kk; j++)
             {
 
-                nfdata_.N_(2 * i, 2 * j) = -GetGreenTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)) * (nfdata_.F_(2 * j) - 1.0);               //Up Up Normal
-                nfdata_.N_(2 * i, 2 * j + 1) = -GetFTau0UpDown(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));                                       //Up Down Anormal
-                nfdata_.N_(2 * i + 1, 2 * j) = -GetFTau0DownUp(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));                                       //Down Up Anormal
-                nfdata_.N_(2 * i + 1, 2 * j + 1) = -GetGreenTau0Down(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)) * (nfdata_.F_(2 * j + 1) - 1.0); //Down Down Normal
+                nfdata_.N_(2 * i, 2 * j) = GetGreenTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));           //Up Up Normal
+                nfdata_.N_(2 * i, 2 * j + 1) = GetFTau0UpDown(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));       //Up Down Anormal
+                nfdata_.N_(2 * i + 1, 2 * j) = GetFTau0DownUp(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));       //Down Up Anormal
+                nfdata_.N_(2 * i + 1, 2 * j + 1) = GetGreenTau0Down(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)); //Down Down Normal
 
                 if (i == j)
                 {
-                    nfdata_.N_(2 * i, 2 * i) += nfdata_.F_(2 * i);
-                    nfdata_.N_(2 * i + 1, 2 * i + 1) += nfdata_.F_(2 * i + 1);
+                    nfdata_.N_(2 * i, 2 * i) -= modelPtr_->auxUp(dataCT_->vertices_.at(i).aux());
+                    nfdata_.N_(2 * i + 1, 2 * i + 1) -= modelPtr_->auxDown(dataCT_->vertices_.at(i).aux());
                 }
             }
         }
