@@ -299,8 +299,9 @@ class Matrix
     //     tmp.save(fname, arma::raw_ascii);
     // }
 
-    void Print() const
+    void Print()
     {
+        mat_.resize(n_rows_, n_cols_);
         mat_.print();
     }
 

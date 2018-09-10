@@ -359,6 +359,60 @@ TEST(UtilitiesTest, BlockRankTwoUpgrade)
     }
 }
 
+TEST(UtilitiesTest, BlockRankTwoUpgradeVers2)
+{
+    //Now test the following: I have the matrix a1 2x2, its inverse is m1. I a1 update it so that it is 3x3 by adding a Row r1 and a Column c1.
+    //Now I want this new matrix a2 and its inverse m2. I can do this by twice the shermann morrison. Lets test that.
+
+    const size_t k = 100;
+    ClusterMatrix_t N1Inverse(k, k);
+    N1Inverse.randu();
+
+    ClusterMatrix_t N1 = N1Inverse.i();
+
+    ClusterMatrix_t Q = ClusterMatrix_t(k, 2).randu();
+    ClusterMatrix_t R = ClusterMatrix_t(2, k).randu();
+    ClusterMatrix_t S = ClusterMatrix_t(2, 2).randu();
+
+    Matrix_t QMatrix(Q); //new cols
+    Matrix_t RMatrix(R); //new rows
+    Matrix_t SMatrix(S);
+
+    ClusterMatrix_t N2Inverse(k + 2, k + 2);
+    N2Inverse.submat(0, 0, k - 1, k - 1) = N1Inverse;
+    N2Inverse.submat(0, k, k - 1, k + 1) = Q;
+    N2Inverse.submat(k, 0, k + 1, k - 1) = R;
+    N2Inverse.submat(k, k, k + 1, k + 1) = S;
+
+    ClusterMatrix_t N2Good = N2Inverse.i(); //The good inverse calculated normally.
+
+    Matrix_t N1Matrix(N1);
+    N1Matrix.Resize(100, 100);
+    N1Matrix.Resize(k, k);
+
+    Matrix_t STilde(2, 2);
+    STilde(0, 0) = N2Good(k, k);
+    STilde(0, 1) = N2Good(k, k + 1);
+    STilde(1, 0) = N2Good(k + 1, k);
+    STilde(1, 1) = N2Good(k + 1, k + 1);
+
+    BlockRankTwoUpgrade(N1Matrix, QMatrix, RMatrix, STilde);
+
+    // //Now m1Matrix shoukld contain the inverse of a2.
+
+    assert(N1Matrix.n_rows() == N1Matrix.n_cols());
+    assert(N1Matrix.n_rows() == N2Good.n_cols);
+
+    for (size_t i = 0; i < N1Matrix.n_rows(); i++)
+    {
+        for (size_t j = 0; j < N1Matrix.n_cols(); j++)
+        {
+            std::cout << "i ,j = " << i << " " << j << std::endl;
+            ASSERT_NEAR(N1Matrix(i, j), N2Good(i, j), DELTA);
+        }
+    }
+}
+
 TEST(UtilitiesTest, ExtractRowAndCol)
 {
     const size_t k = 4;
@@ -406,10 +460,10 @@ TEST(UtilitiesTest, BlockRankOneDownGrade)
 
     BlockRankOneDowngrade(m1Matrix, pp);
 
-    std::cout << "m2Good " << std::endl;
-    m2Good.print();
-    std::cout << "m2Test " << std::endl;
-    m1Matrix.Print();
+    // std::cout << "m2Good " << std::endl;
+    // m2Good.print();
+    // std::cout << "m2Test " << std::endl;
+    // m1Matrix.Print();
     for (size_t i = 0; i < k - 1; i++)
     {
         for (size_t j = 0; j < k - 1; j++)
@@ -458,10 +512,10 @@ TEST(UtilitiesTest, GetSubMat)
             ASSERT_DOUBLE_EQ(dest(ii - 2, jj - 2), src(ii, jj));
         }
     }
-    dest.Print();
+    // dest.Print();
 
     std::cout << "\n\n\n";
-    src.Print();
+    // src.Print();
 }
 
 TEST(UtilitiesTest, BlockRankDownGrade)

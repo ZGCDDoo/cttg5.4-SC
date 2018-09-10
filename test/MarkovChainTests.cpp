@@ -44,7 +44,7 @@ TEST(MonteCarloTest, DoStep)
 
     std::cout << "After Remove " << std::endl;
     size_t ii = 0;
-    for (ii = 0; ii < 10000; ii++)
+    for (ii = 0; ii < 100; ii++)
     {
         mc.DoStep();
     }
@@ -55,6 +55,22 @@ TEST(MonteCarloTest, DoStep)
     Matrix_t tmp;
     tmp = mc.N();
     mc.CleanUpdate();
+
+    std::cout << "tmp = \n\n";
+
+    tmp.Print();
+    std::cout << "\n\nmc.N() = \n\n";
+    mc.N().Print();
+    std::cout << "\n\n";
+
+    std::cout << "Diff = \n\n";
+    (mc.N() - tmp).Print();
+    std::cout << "\n\n";
+
+    assert(!tmp.mat().has_nan());
+    assert(!tmp.mat().has_inf());
+    assert(!mc.N().mat().has_nan());
+    assert(!mc.N().mat().has_inf());
 
     for (size_t i = 0; i < tmp.n_rows(); i++)
     {
@@ -67,11 +83,6 @@ TEST(MonteCarloTest, DoStep)
     ASSERT_EQ(tmp.n_cols(), mc.N().n_rows());
     std::cout << "dims = " << tmp.n_cols() << std::endl;
     mc.SaveTherm();
-
-    assert(tmp.mat().has_nan());
-    assert(tmp.mat().has_inf());
-    assert(mc.N().mat().has_nan());
-    assert(mc.N().mat().has_inf());
 }
 
 int main(int argc, char **argv)

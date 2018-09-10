@@ -138,7 +138,8 @@ class ABC_MarkovChain
 
             Matrix_t Q_(2 * kkold, 2);
             Matrix_t R_(2, 2 * kkold);
-
+            if (kknew >= 3)
+                return;
             //Probably put this in a method
 
             std::cout << "In INsertvertex before loop " << std::endl;
@@ -213,6 +214,7 @@ class ABC_MarkovChain
 
     void RemoveVertex()
     {
+        return;
         AssertSizes();
         updStats_["Removes"][0]++;
         if (dataCT_->vertices_.size())
