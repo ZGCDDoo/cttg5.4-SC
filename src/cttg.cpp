@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     world.barrier();
     //wait_all
     const size_t rank = world.rank();
-    const size_t seed = jj["SEED"].get<size_t>() + 7 * rank;
+    const size_t seed = jj["SEED"].get<size_t>() + 2797 * rank;
 
     {
         std::unique_ptr<MC::ABC_MonteCarlo> monteCarloMachinePtr = MC::MonteCarloBuilder(jj, seed);

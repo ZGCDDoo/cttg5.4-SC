@@ -24,25 +24,21 @@ class GreenBinning
                                                               spin_(spin)
     {
 
-        const size_t LL = ioModel_.indepSites().size();
-        M0Bins_.resize(LL);
-        M1Bins_.resize(LL);
-        M2Bins_.resize(LL);
-        M3Bins_.resize(LL);
+        const size_t two = 2;
+        const size_t LL = two * ioModel_.indepSites().size();
 
-        for (size_t ii = 0; ii < M0Bins_.size(); ii++)
-        {
-            M0Bins_.at(ii).resize(N_BIN_TAU, 0.0);
-            M1Bins_.at(ii).resize(N_BIN_TAU, 0.0);
-            M2Bins_.at(ii).resize(N_BIN_TAU, 0.0);
-            M3Bins_.at(ii).resize(N_BIN_TAU, 0.0);
-        }
+        M0Bins_.resize(4, LL, N_BIN_TAU);
+        M0Bins_.zeros();
+        M1Bins_ = M0Bins_;
+        M2Bins_ = M0Bins_;
+        M3Bins_ = M0Bins_;
     }
 
     ClusterCubeCD_t greenCube() const { return greenCube_; };
 
     void MeasureGreenBinning(const Matrix<double> &Mmat)
     {
+        using arma::span;
 
         const size_t N = dataCT_->vertices_.size();
         const double DeltaInv = N_BIN_TAU / dataCT_->beta_;
@@ -52,10 +48,10 @@ class GreenBinning
             {
                 for (size_t p2 = 0; p2 < N; p2++)
                 {
-                    const size_t s1 = dataCT_->vertices_[p1].site();
+                    const size_t s1 = dataCT_->vertices_.at(p1).site();
                     const size_t s2 = dataCT_->vertices_[p2].site();
                     const size_t ll = ioModel_.FindIndepSiteIndex(s1, s2);
-                    double temp = static_cast<double>(dataCT_->sign_) * Mmat(p1, p2);
+                    SiteVector_t temp = static_cast<double>(dataCT_->sign_) * SiteVector_t({Mmat(2 * p1, 2 * p2), Mmat(2 * p1 + 1, 2 * p2), Mmat(2 * p1, 2 * p2 + 1), Mmat(2 * p1 + 1, 2 * p2 + 1)});
 
                     double tau = dataCT_->vertices_[p1].tau() - dataCT_->vertices_[p2].tau();
                     if (tau < 0.0)
@@ -64,16 +60,16 @@ class GreenBinning
                         tau += dataCT_->beta_;
                     }
 
-                    const int index = DeltaInv * tau;
+                    const size_t index = DeltaInv * tau;
                     const double dTau = tau - (static_cast<double>(index) + 0.5) / DeltaInv;
 
-                    M0Bins_.at(ll).at(index) += temp;
+                    M0Bins_(span(0, 4), span(ll, ll), span(index, index)) += temp;
                     temp *= dTau;
-                    M1Bins_[ll][index] += temp;
+                    M1Bins_(span(0, 4), span(ll, ll), span(index, index)) += temp;
                     temp *= dTau;
-                    M2Bins_[ll][index] += temp;
+                    M2Bins_(span(0, 4), span(ll, ll), span(index, index)) += temp;
                     temp *= dTau;
-                    M3Bins_[ll][index] += temp;
+                    M3Bins_(span(0, 4), span(ll, ll), span(index, index)) += temp;
                 }
             }
         }
@@ -132,10 +128,10 @@ class GreenBinning
     TIOModel ioModel_;
     std::shared_ptr<ISDataCT<TIOModel, TModel>> dataCT_;
 
-    std::vector<std::vector<double>> M0Bins_;
-    std::vector<std::vector<double>> M1Bins_;
-    std::vector<std::vector<double>> M2Bins_;
-    std::vector<std::vector<double>> M3Bins_;
+    ClusterCube_t M0Bins_; //In Nambu style (first  indices is the nambu indices, second index is the indepsiteindex and last index (slice) is the time)
+    ClusterCube_t M1Bins_;
+    ClusterCube_t M2Bins_;
+    ClusterCube_t M3Bins_;
 
     ClusterCubeCD_t greenCube_;
 

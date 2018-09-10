@@ -47,8 +47,7 @@ class ISDataCT
   using GreenTau_t = GreenTau::GreenCluster0Tau<TIOModel>;
 
 public:
-  ISDataCT(const double &beta, TModel model, const size_t &NTau) : MupPtr_(new Matrix_t()),
-                                                                   MdownPtr_(new Matrix_t()),
+  ISDataCT(const double &beta, TModel model, const size_t &NTau) : MPtr_(new Matrix_t()),
                                                                    vertices_(),
                                                                    beta_(beta),
                                                                    sign_(1)
@@ -79,8 +78,7 @@ private:
 
   GreenTau_t green0CachedUp_; //what the hell, this should be const. Better, Moved to Model Shit Fuck
   GreenTau_t green0CachedDown_;
-  std::shared_ptr<Matrix_t> MupPtr_;
-  std::shared_ptr<Matrix_t> MdownPtr_;
+  std::shared_ptr<Matrix_t> MPtr_;
   std::vector<Vertex> vertices_;
   const double beta_;
   Sign_t sign_;
