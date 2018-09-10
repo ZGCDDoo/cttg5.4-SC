@@ -106,13 +106,13 @@ class GreenBinning
                     const cd_t coeff = lambda * exp_factor;
 
                     temp_matsubara += coeff * M0Bins_(span(0, 4), span(ll, ll), span(ii, ii));
-                    //             temp_matsubara += coeff * M1Bins_[ll][ii] * iomega_n;
-                    //             temp_matsubara += coeff * M2Bins_[ll][ii] * iomega_n * iomega_n / 2.0;
-                    //             temp_matsubara += coeff * M3Bins_[ll][ii] * iomega_n * iomega_n * iomega_n / 6.0;
+                    temp_matsubara += coeff * M1Bins_(span(0, 4), span(ll, ll), span(ii, ii)) * iomega_n;
+                    temp_matsubara += coeff * M2Bins_(span(0, 4), span(ll, ll), span(ii, ii)) * iomega_n * iomega_n / 2.0;
+                    temp_matsubara += coeff * M3Bins_(span(0, 4), span(ll, ll), span(ii, ii)) * iomega_n * iomega_n * iomega_n / 6.0;
 
-                    //             exp_factor *= fact;
+                    exp_factor *= fact;
                 }
-                //         indep_M_matsubara_sampled(ll) = temp_matsubara;
+                indep_M_matsubara_sampled(ll) = temp_matsubara;
             }
 
             //     const ClusterMatrixCD_t dummy1 = ioModel_.IndepToFull(indep_M_matsubara_sampled);
