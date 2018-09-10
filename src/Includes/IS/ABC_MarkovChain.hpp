@@ -112,12 +112,12 @@ class ABC_MarkovChain
         assert(2 * kk == nfdata_.N_.n_rows());
         assert(2 * kk == nfdata_.N_.n_cols());
         assert(2 * kk == nfdata_.F_.n_elem);
-        std::cout << "kk = " << kk << std::endl;
+        // std::cout << "kk = " << kk << std::endl;
     }
 
     void InsertVertex()
     {
-        std::cout << "In insertvertex" << std::endl;
+        // std::cout << "In insertvertex" << std::endl;
 
         AssertSizes();
         updStats_["Inserts"][0]++;
