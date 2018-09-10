@@ -353,7 +353,7 @@ TEST(UtilitiesTest, BlockRankTwoUpgrade)
     {
         for (size_t j = 0; j < m1Matrix.n_cols(); j++)
         {
-            std::cout << "i ,j = " << i << " " << j << std::endl;
+            // std::cout << "i ,j = " << i << " " << j << std::endl;
             ASSERT_NEAR(m1Matrix(i, j), m2Good(i, j), DELTA);
         }
     }
