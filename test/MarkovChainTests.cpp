@@ -56,16 +56,16 @@ TEST(MonteCarloTest, DoStep)
     tmp = mc.N();
     mc.CleanUpdate();
 
-    std::cout << "tmp = \n\n";
+    // std::cout << "tmp = \n\n";
 
-    tmp.Print();
-    std::cout << "\n\nmc.N() = \n\n";
-    mc.N().Print();
-    std::cout << "\n\n";
+    // tmp.Print();
+    // std::cout << "\n\nmc.N() = \n\n";
+    // mc.N().Print();
+    // std::cout << "\n\n";
 
-    std::cout << "Diff = \n\n";
-    (mc.N() - tmp).Print();
-    std::cout << "\n\n";
+    // std::cout << "Diff = \n\n";
+    // (mc.N() - tmp).Print();
+    // std::cout << "\n\n";
 
     assert(!tmp.mat().has_nan());
     assert(!tmp.mat().has_inf());
