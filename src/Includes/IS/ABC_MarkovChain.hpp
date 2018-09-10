@@ -140,7 +140,7 @@ class ABC_MarkovChain
             Matrix_t R_(2, 2 * kkold);
             //Probably put this in a method
 
-            std::cout << "In INsertvertex before loop " << std::endl;
+            // std::cout << "In INsertvertex before loop " << std::endl;
             for (size_t i = 0; i < kkold; i++)
             {
 
@@ -156,7 +156,7 @@ class ABC_MarkovChain
                 R_(1, 2 * i) = -GetFTau0DownUp(vertex, vertexI);                                       // F_{Down, Up}_{j, p}
                 R_(1, 2 * i + 1) = -GetGreenTau0Down(vertex, vertexI) * (nfdata_.F_(2 * i + 1) - 1.0); // G_{Down, Down}_{j, p}
             }
-            std::cout << "In INsertvertex After loop " << std::endl;
+            // std::cout << "In INsertvertex After loop " << std::endl;
 
             //Watch out, we are calculating two times the matrix NQ, once here and once in ranktwoupgrade. In a next version, only calculate here, not in ranktwoupgrade.
             // Matrix_t NQ(2 * kkold, 2); //NQ = N*Q
@@ -207,7 +207,7 @@ class ABC_MarkovChain
             AssertSizes();
         }
 
-        std::cout << "After insertvertex" << std::endl;
+        // std::cout << "After insertvertex" << std::endl;
     }
 
     void RemoveVertex()
@@ -218,7 +218,8 @@ class ABC_MarkovChain
         {
             const size_t pp = static_cast<int>(urng_() * dataCT_->vertices_.size());
 
-            const double ratioAcc = PROBINSERT / PROBREMOVE; //* static_cast<double>(dataCT_->vertices_.size()) / KAux() * nfdata_.Nup_(pp, pp) * nfdata_.Ndown_(pp, pp);
+            const ClusterMatrix_t STildeInverse = {{nfdata_.N_(2 * pp, 2 * pp), nfdata_.N_(2 * pp, 2 * pp + 1)}, {nfdata_.N_(2 * pp + 1, 2 * pp), nfdata_.N_(2 * pp + 1, 2 * pp + 1)}};
+            const double ratioAcc = PROBINSERT / PROBREMOVE * static_cast<double>(dataCT_->vertices_.size()) / KAux() * arma::det(STildeInverse);
 
             if (urng_() < std::abs(ratioAcc))
             {

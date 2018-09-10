@@ -373,10 +373,10 @@ void BlockDowngrade(Matrix_t &m1, const size_t &pp, const size_t &nn)
         C = GetSubMat(kkmnn, 0, kk, kkmnn, m1);
         D = GetSubMat(kkmnn, kkmnn, kk, kk, m1);
 
-        std::cout << "B.n_rows = " << B.n_rows() << std::endl;
+        // std::cout << "B.n_rows = " << B.n_rows() << std::endl;
         D.Inverse();
-        std::cout << " D.n_rows() = " << D.n_rows() << std::endl;
-        std::cout << " kkmnn = " << kkmnn << std::endl;
+        // std::cout << " D.n_rows() = " << D.n_rows() << std::endl;
+        // std::cout << " kkmnn = " << kkmnn << std::endl;
 
         Matrix_t DInverseC(nn, kkmnn);
         DInverseC.Zeros();
