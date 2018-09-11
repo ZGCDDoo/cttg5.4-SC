@@ -287,6 +287,17 @@ class Base_IOModel
         return fullMatrix;
     }
 
+    template <typename T1_t, typename T2_t = ClusterMatrixCD_t>
+    T2_t IndepToFullNambu(const T1_t &indepElements) //in practice will be a Sitevector_t or SitevectorCD_t
+    {
+
+        T2_t fullMatrix(2 * Nc, 2 * Nc);
+
+        // fullMatrix.submat(0, Nc - 1, 0, Nc - 1) = IndeptoFull()
+
+        return fullMatrix;
+    }
+
     //from th full cube return the independant in tabular form
     template <typename T1_t>
     ClusterMatrixCD_t FullCubeToIndep(const T1_t &greenCube) //TT = {ClusterCube_t or clustercubeCD_t}

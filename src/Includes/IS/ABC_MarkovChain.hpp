@@ -311,7 +311,7 @@ class ABC_MarkovChain
     {
         SiteVector_t FVM1 = -(nfdata_.F_ - 1.0);
         DDMGMM(FVM1, nfdata_.N_, *(dataCT_->MPtr_));
-        // obs_.Measure();
+        obs_.Measure();
     }
 
     void SaveMeas()

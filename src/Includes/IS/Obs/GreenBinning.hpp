@@ -9,13 +9,15 @@ namespace Markov
 {
 namespace Obs
 {
-const size_t N_BIN_TAU = 100000;
 
 template <typename TIOModel, typename TModel>
 class GreenBinning
 {
 
   public:
+    const size_t NAMBU_SIZE = 4;
+    const size_t N_BIN_TAU = 100000;
+
     GreenBinning(const std::shared_ptr<TModel> &modelPtr, const std::shared_ptr<ISDataCT<TIOModel, TModel>> &dataCT,
                  const Json &jj, const FermionSpin_t &spin) : modelPtr_(modelPtr),
                                                               ioModel_(modelPtr_->ioModel()),
@@ -27,7 +29,7 @@ class GreenBinning
         const size_t two = 2;
         const size_t LL = two * ioModel_.indepSites().size();
 
-        M0Bins_.resize(4, LL, N_BIN_TAU);
+        M0Bins_.resize(NAMBU_SIZE, LL, N_BIN_TAU);
         M0Bins_.zeros();
         M1Bins_ = M0Bins_;
         M2Bins_ = M0Bins_;
@@ -63,13 +65,13 @@ class GreenBinning
                     const size_t index = DeltaInv * tau;
                     const double dTau = tau - (static_cast<double>(index) + 0.5) / DeltaInv;
 
-                    M0Bins_(span(0, 4), span(ll, ll), span(index, index)) += temp;
+                    M0Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(index, index)) += temp;
                     temp *= dTau;
-                    M1Bins_(span(0, 4), span(ll, ll), span(index, index)) += temp;
+                    M1Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(index, index)) += temp;
                     temp *= dTau;
-                    M2Bins_(span(0, 4), span(ll, ll), span(index, index)) += temp;
+                    M2Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(index, index)) += temp;
                     temp *= dTau;
-                    M3Bins_(span(0, 4), span(ll, ll), span(index, index)) += temp;
+                    M3Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(index, index)) += temp;
                 }
             }
         }
@@ -83,7 +85,7 @@ class GreenBinning
 
         const double dTau = dataCT_->beta_ / N_BIN_TAU;
         const size_t LL = ioModel_.indepSites().size();
-        SiteVectorCD_t indep_M_matsubara_sampled(2 * LL);
+        ClusterMatrixCD_t indep_M_matsubara_sampled(NAMBU_SIZE, 2 * LL);
         const ClusterCubeCD_t greenNambu0 = modelPtr_->greenNambu0();
         ClusterCubeCD_t greenNambu(2 * ioModel_.Nc, 2 * ioModel_.Nc, NMat_);
         greenNambu.zeros();
@@ -97,7 +99,7 @@ class GreenBinning
 
             for (size_t ll = 0; ll < LL; ll++)
             {
-                SiteVectorCD_t temp_matsubara(2 * LL);
+                ClusterMatrixCD_t temp_matsubara(NAMBU_SIZE, 2 * LL);
                 temp_matsubara.zeros();
 
                 cd_t exp_factor = std::exp(iomega_n * dTau / 2.0) / (static_cast<double>(ioModel_.nOfAssociatedSites().at(ll))); //watch out important factor!
@@ -105,17 +107,17 @@ class GreenBinning
                 {
                     const cd_t coeff = lambda * exp_factor;
 
-                    temp_matsubara += coeff * M0Bins_(span(0, 4), span(ll, ll), span(ii, ii));
-                    temp_matsubara += coeff * M1Bins_(span(0, 4), span(ll, ll), span(ii, ii)) * iomega_n;
-                    temp_matsubara += coeff * M2Bins_(span(0, 4), span(ll, ll), span(ii, ii)) * iomega_n * iomega_n / 2.0;
-                    temp_matsubara += coeff * M3Bins_(span(0, 4), span(ll, ll), span(ii, ii)) * iomega_n * iomega_n * iomega_n / 6.0;
+                    temp_matsubara += coeff * M0Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(ii, ii));
+                    temp_matsubara += coeff * M1Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(ii, ii)) * iomega_n;
+                    temp_matsubara += coeff * M2Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(ii, ii)) * iomega_n * iomega_n / 2.0;
+                    temp_matsubara += coeff * M3Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(ii, ii)) * iomega_n * iomega_n * iomega_n / 6.0;
 
                     exp_factor *= fact;
                 }
-                indep_M_matsubara_sampled(ll) = temp_matsubara;
+                // indep_M_matsubara_sampled(ll) = temp_matsubara;
             }
 
-            //     const ClusterMatrixCD_t dummy1 = ioModel_.IndepToFull(indep_M_matsubara_sampled);
+            //     const ClusterMatrixCD_t dummy1 = ioModel_.IndepToFullNambu(indep_M_matsubara_sampled);
             //     const ClusterMatrixCD_t green0 = green0CubeMatsubara.slice(n);
 
             //     greenCube.slice(n) = green0 - green0 * dummy1 * green0 / (dataCT_->beta_ * signMeas);
