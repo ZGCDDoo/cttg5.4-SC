@@ -36,7 +36,7 @@ class GreenBinning
         M3Bins_ = M0Bins_;
     }
 
-    ClusterCubeCD_t greenCube() const { return greenCube_; };
+    ClusterCubeCD_t greenNambuCube() const { return greenNambuCube_; };
 
     void MeasureGreenBinning(const Matrix<double> &Mmat)
     {
@@ -86,9 +86,10 @@ class GreenBinning
         const double dTau = dataCT_->beta_ / N_BIN_TAU;
         const size_t LL = ioModel_.indepSites().size();
         ClusterMatrixCD_t indep_M_matsubara_sampled(NAMBU_SIZE, 2 * LL);
-        const ClusterCubeCD_t greenNambu0 = modelPtr_->greenNambu0();
-        ClusterCubeCD_t greenNambu(2 * ioModel_.Nc, 2 * ioModel_.Nc, NMat_);
-        greenNambu.zeros();
+        const ClusterCubeCD_t greenNambu0Cube = modelPtr_->greenNambu0();
+        ClusterCubeCD_t greenNambuCube(2 * ioModel_.Nc, 2 * ioModel_.Nc, NMat_);
+        greenNambuCube.zeros();
+        std::cout << "Here " << std::endl;
 
         for (size_t n = 0; n < NMat_; n++)
         {
@@ -99,7 +100,7 @@ class GreenBinning
 
             for (size_t ll = 0; ll < LL; ll++)
             {
-                ClusterMatrixCD_t temp_matsubara(NAMBU_SIZE, 2 * LL);
+                SiteVectorCD_t temp_matsubara(NAMBU_SIZE);
                 temp_matsubara.zeros();
 
                 cd_t exp_factor = std::exp(iomega_n * dTau / 2.0) / (static_cast<double>(ioModel_.nOfAssociatedSites().at(ll))); //watch out important factor!
@@ -114,19 +115,20 @@ class GreenBinning
 
                     exp_factor *= fact;
                 }
-                // indep_M_matsubara_sampled(ll) = temp_matsubara;
+                indep_M_matsubara_sampled.col(ll) = temp_matsubara;
             }
 
-            //     const ClusterMatrixCD_t dummy1 = ioModel_.IndepToFullNambu(indep_M_matsubara_sampled);
-            //     const ClusterMatrixCD_t green0 = green0CubeMatsubara.slice(n);
+            const ClusterMatrixCD_t dummy1 = ioModel_.IndepToFullNambu(indep_M_matsubara_sampled);
+            const ClusterMatrixCD_t greenNambu0 = greenNambu0Cube.slice(n);
 
-            //     greenCube.slice(n) = green0 - green0 * dummy1 * green0 / (dataCT_->beta_ * signMeas);
+            greenNambuCube.slice(n) = greenNambu0 - greenNambu0 * dummy1 * greenNambu0 / (dataCT_->beta_ * signMeas);
+            std::cout << "Here 2 " << std::endl;
         }
 
-        // greenCube_ = greenCube; //in case it is needed later on
+        greenNambuCube_ = greenNambuCube; //in case it is needed later on
 
-        // mpiUt::Print("End of GreenBinning.FinalizeGreenBinning()");
-        // return greenCube; //the  measured interacting green function
+        mpiUt::Print("End of GreenBinning.FinalizeGreenBinning()");
+        return greenNambuCube; //the  measured interacting green function
     }
 
   private:
@@ -139,7 +141,7 @@ class GreenBinning
     ClusterCube_t M2Bins_;
     ClusterCube_t M3Bins_;
 
-    ClusterCubeCD_t greenCube_;
+    ClusterCubeCD_t greenNambuCube_;
 
     const size_t NMat_;
     const FermionSpin_t spin_;

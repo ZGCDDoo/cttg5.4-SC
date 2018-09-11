@@ -73,38 +73,30 @@ class Observables
                 obsScal["k"] = fact * expOrder_;
 
                 const ClusterMatrixCD_t greenNambu = ioModel_.FullCubeToIndep(greenBinning_.FinalizeGreenBinning(signMeas_, NMeas_));
-                // #ifdef AFM
-                //                 ClusterMatrixCD_t greenMatsubaraDown = ioModel_.FullCubeToIndep(greenBinningDown_.FinalizeGreenBinning(signMeas_, NMeas_));
 
-                // #endif
+                //Gather and stats of all the results for all cores
+                Result::ISResult isResult(obsScal, greenNambu, greenNambu, fillingAndDocc_.fillingUp(), fillingAndDocc_.fillingDown());
+                std::vector<Result::ISResult> isResultVec;
+#ifdef HAVEMPI
 
-                //                 //Gather and stats of all the results for all cores
-                // #ifndef AFM
-                //                 Result::ISResult isResult(obsScal, greenMatsubaraUp, greenMatsubaraUp, fillingAndDocc_.fillingUp(), fillingAndDocc_.fillingDown());
-                // #else
-                //                 Result::ISResult isResult(obsScal, greenMatsubaraUp, greenMatsubaraDown, fillingAndDocc_.fillingUp(), fillingAndDocc_.fillingDown());
-                // #endif
-                //                 std::vector<Result::ISResult> isResultVec;
-                // #ifdef HAVEMPI
+                mpi::communicator world;
+                if (mpiUt::Rank() == mpiUt::master)
+                {
+                        mpi::gather(world, isResult, isResultVec, mpiUt::master);
+                }
+                else
+                {
+                        mpi::gather(world, isResult, mpiUt::master);
+                }
+                if (mpiUt::Rank() == mpiUt::master)
+                {
+                        mpiUt::IOResult<TIOModel>::SaveISResults(isResultVec, dataCT_->beta_);
+                }
 
-                //                 mpi::communicator world;
-                //                 if (mpiUt::Rank() == mpiUt::master)
-                //                 {
-                //                         mpi::gather(world, isResult, isResultVec, mpiUt::master);
-                //                 }
-                //                 else
-                //                 {
-                //                         mpi::gather(world, isResult, mpiUt::master);
-                //                 }
-                //                 if (mpiUt::Rank() == mpiUt::master)
-                //                 {
-                //                         mpiUt::IOResult<TIOModel>::SaveISResults(isResultVec, dataCT_->beta_);
-                //                 }
-
-                // #else
-                //                 isResultVec.push_back(isResult);
-                //                 mpiUt::IOResult<TIOModel>::SaveISResults(isResultVec, dataCT_->beta_);
-                // #endif
+#else
+                isResultVec.push_back(isResult);
+                mpiUt::IOResult<TIOModel>::SaveISResults(isResultVec, dataCT_->beta_);
+#endif
 
                 //                 // Start: This should be in PostProcess.cpp ?
                 //                 //Start of observables that are easier and ok to do once all has been saved (for exemples, depends only on final green function)
@@ -130,7 +122,7 @@ class Observables
                 //                 //End: This should be in PostProcess.cpp ?
                 // #endif
                 //                 //ioModel_.SaveCube("greenUp.dat", modelPtr_->greenCluster0MatUp().data(), modelPtr_->beta());
-                //                 mpiUt::Print("End of Observables.Save()");
+                mpiUt::Print("End of Observables.Save()");
         }
 
       private:

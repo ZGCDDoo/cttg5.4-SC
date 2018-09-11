@@ -280,7 +280,7 @@ class Base_IOModel
             for (size_t jj = 0; jj < Nc; jj++)
             {
                 size_t index = FindIndepSiteIndex(ii, jj);
-                fullMatrix(ii, jj) = indepElements.at(index);
+                fullMatrix(ii, jj) = indepElements(index);
             }
         }
 
@@ -288,12 +288,17 @@ class Base_IOModel
     }
 
     template <typename T1_t, typename T2_t = ClusterMatrixCD_t>
-    T2_t IndepToFullNambu(const T1_t &indepElements) //in practice will be a Sitevector_t or SitevectorCD_t
+    T2_t IndepToFullNambu(const T1_t &indepElements) //in practice will be a ClusterMatrixCD_t or ClusterMatrix_t
     {
+        std::cout << "Start of indeptofullnambu " << std::endl;
 
         T2_t fullMatrix(2 * Nc, 2 * Nc);
+        fullMatrix.zeros();
 
-        // fullMatrix.submat(0, Nc - 1, 0, Nc - 1) = IndeptoFull()
+        fullMatrix.submat(0, Nc - 1, 0, Nc - 1) = this->IndepToFull(indepElements.row(0));
+        fullMatrix.submat(Nc, Nc, 2 * Nc - 1, 2 * Nc - 1) = IndepToFull(indepElements.row(3));
+
+        std::cout << "End of indeptofullnambu " << std::endl;
 
         return fullMatrix;
     }
