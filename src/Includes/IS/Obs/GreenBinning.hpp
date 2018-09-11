@@ -40,7 +40,6 @@ class GreenBinning
 
     void MeasureGreenBinning(const Matrix<double> &Mmat)
     {
-        using arma::span;
 
         const size_t N = dataCT_->vertices_.size();
         const double DeltaInv = N_BIN_TAU / dataCT_->beta_;
@@ -65,13 +64,13 @@ class GreenBinning
                     const size_t index = DeltaInv * tau;
                     const double dTau = tau - (static_cast<double>(index) + 0.5) / DeltaInv;
 
-                    M0Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(index, index)) += temp;
+                    M0Bins_.slice(index).col(ll) += temp;
                     temp *= dTau;
-                    M1Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(index, index)) += temp;
+                    M1Bins_.slice(index).col(ll) += temp;
                     temp *= dTau;
-                    M2Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(index, index)) += temp;
+                    M2Bins_.slice(index).col(ll) += temp;
                     temp *= dTau;
-                    M3Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(index, index)) += temp;
+                    M3Bins_.slice(index).col(ll) += temp;
                 }
             }
         }
@@ -79,17 +78,17 @@ class GreenBinning
 
     ClusterCubeCD_t FinalizeGreenBinning(const double &signMeas, const size_t &NMeas)
     {
-        using arma::span;
 
         mpiUt::Print("Start of GreenBinning.FinalizeGreenBinning()");
 
         const double dTau = dataCT_->beta_ / N_BIN_TAU;
         const size_t LL = ioModel_.indepSites().size();
         ClusterMatrixCD_t indep_M_matsubara_sampled(NAMBU_SIZE, 2 * LL);
+        SiteVectorCD_t temp_matsubara(NAMBU_SIZE);
         const ClusterCubeCD_t greenNambu0Cube = modelPtr_->greenNambu0();
         ClusterCubeCD_t greenNambuCube(2 * ioModel_.Nc, 2 * ioModel_.Nc, NMat_);
         greenNambuCube.zeros();
-        std::cout << "Here " << std::endl;
+        // std::cout << "Here " << std::endl;
 
         for (size_t n = 0; n < NMat_; n++)
         {
@@ -100,7 +99,6 @@ class GreenBinning
 
             for (size_t ll = 0; ll < LL; ll++)
             {
-                SiteVectorCD_t temp_matsubara(NAMBU_SIZE);
                 temp_matsubara.zeros();
 
                 cd_t exp_factor = std::exp(iomega_n * dTau / 2.0) / (static_cast<double>(ioModel_.nOfAssociatedSites().at(ll))); //watch out important factor!
@@ -108,10 +106,10 @@ class GreenBinning
                 {
                     const cd_t coeff = lambda * exp_factor;
 
-                    temp_matsubara += coeff * M0Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(ii, ii));
-                    temp_matsubara += coeff * M1Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(ii, ii)) * iomega_n;
-                    temp_matsubara += coeff * M2Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(ii, ii)) * iomega_n * iomega_n / 2.0;
-                    temp_matsubara += coeff * M3Bins_(span(0, NAMBU_SIZE - 1), span(ll, ll), span(ii, ii)) * iomega_n * iomega_n * iomega_n / 6.0;
+                    temp_matsubara += coeff * M0Bins_.slice(ii).col(ll);
+                    temp_matsubara += coeff * M1Bins_.slice(ii).col(ll) * iomega_n;
+                    temp_matsubara += coeff * M2Bins_.slice(ii).col(ll) * iomega_n * iomega_n / 2.0;
+                    temp_matsubara += coeff * M3Bins_.slice(ii).col(ll) * iomega_n * iomega_n * iomega_n / 6.0;
 
                     exp_factor *= fact;
                 }
@@ -122,7 +120,7 @@ class GreenBinning
             const ClusterMatrixCD_t greenNambu0 = greenNambu0Cube.slice(n);
 
             greenNambuCube.slice(n) = greenNambu0 - greenNambu0 * dummy1 * greenNambu0 / (dataCT_->beta_ * signMeas);
-            std::cout << "Here 2 " << std::endl;
+            // std::cout << "Here 2 " << std::endl;
         }
 
         greenNambuCube_ = greenNambuCube; //in case it is needed later on

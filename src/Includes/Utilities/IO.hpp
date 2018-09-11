@@ -290,15 +290,15 @@ class Base_IOModel
     template <typename T1_t, typename T2_t = ClusterMatrixCD_t>
     T2_t IndepToFullNambu(const T1_t &indepElements) //in practice will be a ClusterMatrixCD_t or ClusterMatrix_t
     {
-        std::cout << "Start of indeptofullnambu " << std::endl;
+        // std::cout << "Start of indeptofullnambu " << std::endl;
 
         T2_t fullMatrix(2 * Nc, 2 * Nc);
         fullMatrix.zeros();
 
-        fullMatrix.submat(0, Nc - 1, 0, Nc - 1) = this->IndepToFull(indepElements.row(0));
+        fullMatrix.submat(0, 0, Nc - 1, Nc - 1) = this->IndepToFull(indepElements.row(0));
         fullMatrix.submat(Nc, Nc, 2 * Nc - 1, 2 * Nc - 1) = IndepToFull(indepElements.row(3));
 
-        std::cout << "End of indeptofullnambu " << std::endl;
+        // std::cout << "End of indeptofullnambu " << std::endl;
 
         return fullMatrix;
     }
