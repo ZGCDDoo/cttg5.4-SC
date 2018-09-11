@@ -92,8 +92,12 @@ class ABC_Model_2D
                 }
 
                 this->hybridizationMatUp_ = GreenMat::HybridizationMat(hybtmpUp, this->hybFM_);
+
 #ifdef AFM
                 this->hybridizationMatDown_ = GreenMat::HybridizationMat(hybtmpDown, this->hybFM_);
+#else
+                this->hybridizationMatDown_ = this->hybridizationMatUp_;
+
 #endif
 
                 //this is in fact greencluster tilde.
@@ -106,11 +110,12 @@ class ABC_Model_2D
                 {
                         ioModel_.SaveCube("giwn", this->greenCluster0MatUp_.data(), this->beta_);
                 }
-#ifndef AFM
-                this->greenCluster0MatDown_ = greenCluster0MatUp_;
-#endif
+
 #ifdef AFM
                 this->greenCluster0MatDown_ = GreenMat::GreenCluster0Mat(this->hybridizationMatDown_, this->tLoc_, this->auxMu(), this->beta_);
+
+#else
+                this->greenCluster0MatDown_ = greenCluster0MatUp_;
 #endif
 
                 //For now, set the anormal parts to zero

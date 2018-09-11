@@ -53,13 +53,8 @@ public:
                                                                    sign_(1)
 
   {
-#ifdef AFM
     green0CachedUp_ = GreenTau::GreenCluster0Tau<TIOModel>(model.greenCluster0MatUp(), NTau);
     green0CachedDown_ = GreenTau::GreenCluster0Tau<TIOModel>(model.greenCluster0MatDown(), NTau);
-#endif
-#ifndef AFM
-    green0CachedUp_ = GreenTau::GreenCluster0Tau<TIOModel>(model.greenCluster0MatUp(), NTau);
-#endif
   }
 
   double beta() const { return beta_; };

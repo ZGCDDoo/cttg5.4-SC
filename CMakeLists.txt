@@ -118,11 +118,11 @@ endif ()
 ################################
 set(EXECECUTABLES
     cttg
-    cttg_sub
-    cttg_afm
-    cttg_sub_afm
-    cttg_DCA
-    cttg_sub_DCA
+    #cttg_sub
+    #cttg_afm
+    #cttg_sub_afm
+    #cttg_DCA
+    #cttg_sub_DCA
 )
 
 foreach(executable ${EXECECUTABLES})
@@ -194,13 +194,13 @@ if (${TEST})
     IntegratorTests
     ModelTriangle2x2Tests
     UtilitiesTests
-    SelfConsistencyTests
+    #SelfConsistencyTests
     MarkovChainTests
     MarkovChainSquare2x2Tests
-    MarkovChainAuxTests
-    MarkovChainSubMatrixSquare2x2Tests
-    MarkovChainAuxSubMatrixTests
-    MarkovChainSubMatrixTests
+    #MarkovChainAuxTests
+    #MarkovChainSubMatrixSquare2x2Tests
+    #MarkovChainAuxSubMatrixTests
+    #MarkovChainSubMatrixTests
     MatrixTests
     ObservablesTests
     )

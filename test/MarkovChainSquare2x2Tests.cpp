@@ -56,25 +56,22 @@ TEST(MarkovChainSquare2x2Tests, DoStep)
 
     std::cout << "After DOstep " << std::endl;
 
-    Matrix_t tmpUp;
-    Matrix_t tmpDown;
-    tmpUp = mc.Nup();
-    tmpDown = mc.Ndown();
-    std::cout << "Mup.size = " << tmpUp.n_cols() << std::endl;
+    Matrix_t tmp;
+    tmp = mc.N();
+    std::cout << "N.size = " << tmp.n_cols() << std::endl;
     mc.CleanUpdate();
 
-    for (size_t i = 0; i < tmpUp.n_rows(); i++)
+    for (size_t i = 0; i < tmp.n_rows(); i++)
     {
-        for (size_t j = 0; j < tmpUp.n_rows(); j++)
+        for (size_t j = 0; j < tmp.n_rows(); j++)
         {
-            ASSERT_NEAR(tmpUp(i, j), mc.Nup()(i, j), DELTA);
-            ASSERT_NEAR(tmpDown(i, j), mc.Ndown()(i, j), DELTA);
+            ASSERT_NEAR(tmp(i, j), mc.N()(i, j), DELTA);
         }
     }
 
-    ASSERT_EQ(tmpUp.n_cols(), mc.Nup().n_rows());
-    ASSERT_EQ(tmpUp.n_cols(), tmpUp.n_rows());
-    std::cout << "dims = " << tmpUp.n_cols() << std::endl;
+    ASSERT_EQ(tmp.n_cols(), mc.N().n_rows());
+    ASSERT_EQ(tmp.n_cols(), tmp.n_rows());
+    std::cout << "dims = " << tmp.n_cols() << std::endl;
     mc.SaveTherm();
 
     const size_t kk = 200000;

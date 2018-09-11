@@ -288,13 +288,7 @@ class ABC_MarkovChain
     // In fact return -g_Down(-tau) (nambu version of gdown)
     double GetGreenTau0Down(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-
-#ifdef AFM
         return (dataCT_->green0CachedDown_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau())));
-#else
-        return (dataCT_->green0CachedUp_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau())));
-
-#endif
     }
 
     double GetFTau0DownUp(const Vertex &vertexI, const Vertex &vertexJ) const
