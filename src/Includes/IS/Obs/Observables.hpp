@@ -49,7 +49,7 @@ class Observables
                 NMeas_++;
                 signMeas_ += static_cast<double>(dataCT_->sign_);
                 expOrder_ += static_cast<double>(dataCT_->vertices_.size()) * static_cast<double>(dataCT_->sign_);
-                // fillingAndDocc_.MeasureFillingAndDocc();
+                fillingAndDocc_.MeasureFillingAndDocc();
                 greenBinning_.MeasureGreenBinning(*dataCT_->MPtr_);
 
                 // mpiUt::Print("End of Measure");
@@ -60,15 +60,15 @@ class Observables
                 mpiUt::Print("Start of Observables.Save()");
                 signMeas_ /= NMeas_;
 
-                //                 fillingAndDocc_.Finalize(signMeas_, NMeas_);
+                fillingAndDocc_.Finalize(signMeas_, NMeas_);
                 std::map<std::string, double> obsScal;
 
-                //                 obsScal = fillingAndDocc_.GetObs();
+                obsScal = fillingAndDocc_.GetObs();
 
                 obsScal["sign"] = signMeas_;
                 obsScal["NMeas"] = NMeas_;
 
-                //                 //dont forget that the following obs have not been finalized (multiplied by following factor)
+                //dont forget that the following obs have not been finalized (multiplied by following factor)
                 const double fact = 1.0 / (NMeas_ * signMeas_);
                 obsScal["k"] = fact * expOrder_;
 
