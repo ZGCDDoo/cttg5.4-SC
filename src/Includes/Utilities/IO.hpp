@@ -191,6 +191,27 @@ class Base_IOModel
         return cubetmp;
     }
 
+    //Read a Nambu in .dat format.
+    ClusterCubeCD_t ReadNambuDat(const std::vector<std::string> &filenameVec) const
+    {
+        mpiUt::Print("In IOModel ReadNambuDat ");
+        assert(filenameVec.size() == 4);
+        ClusterCubeCD_t greenUp = ReadGreenDat(filenameVec.at(0));
+        ClusterCubeCD_t greenDown = ReadGreenDat(filenameVec.at(3));
+
+        const size_t Nc = greenUp.n_rows;
+        const size_t NN = greenUp.n_slices;
+
+        ClusterCubeCD_t cubetmp(2 * Nc, 2 * Nc, greenUp.n_slices);
+        cubetmp.zeros();
+
+        using arma::span;
+        cubetmp.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = greenUp;
+        cubetmp.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = greenDown;
+
+        return cubetmp;
+    }
+
     void SaveCube(const std::string &fname, const ClusterCubeCD_t &green, const double &beta, const size_t &precision = 10, const bool &saveArma = false) const
     {
         const size_t NMat = green.n_slices;

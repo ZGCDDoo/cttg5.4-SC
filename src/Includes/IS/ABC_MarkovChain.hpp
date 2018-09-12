@@ -248,7 +248,7 @@ class ABC_MarkovChain
         }
     }
 
-    void CleanUpdate(bool print = false)
+    void CleanUpdate()
     {
         // mpiUt::Print("Cleaning, sign, k =  " + std::to_string(dataCT_->sign_) + ",  " + std::to_string(dataCT_->vertices_.size()));
         const size_t kk = dataCT_->vertices_.size();

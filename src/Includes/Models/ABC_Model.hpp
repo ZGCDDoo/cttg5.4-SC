@@ -118,14 +118,19 @@ class ABC_Model_2D
                 this->greenCluster0MatDown_ = greenCluster0MatUp_;
 #endif
 
+                //Nambu form
                 //For now, set the anormal parts to zero
                 const size_t NN = greenCluster0MatUp_.n_slices();
                 greenNambu0_.resize(2 * Nc, 2 * Nc, NN);
                 greenNambu0_.zeros();
+                hybNambu_ = greenNambu0_;
 
                 using arma::span;
                 greenNambu0_.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = greenCluster0MatUp_.data();
-                greenNambu0_.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = greenCluster0MatUp_.data();
+                greenNambu0_.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = greenCluster0MatDown_.data();
+
+                hybNambu_.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = hybridizationMatUp_.data();
+                hybNambu_.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = hybridizationMatDown_.data();
         }
 
         virtual ~ABC_Model_2D() = 0;
@@ -148,6 +153,7 @@ class ABC_Model_2D
         GreenMat::HybridizationMat const hybridizationAnormalMatDown() const { return hybridizationAnormalMatDown_; };
 
         ClusterCubeCD_t const greenNambu0() const { return greenNambu0_; };
+        ClusterCubeCD_t const hybNambu() const { return hybNambu_; };
 
         TH0 const h0() { return h0_; };
         TIOModel const ioModel() { return ioModel_; };
@@ -211,6 +217,7 @@ class ABC_Model_2D
         GreenMat::GreenCluster0Mat FAnormalCluster0MatDown_;
 
         ClusterCubeCD_t greenNambu0_;
+        ClusterCubeCD_t hybNambu_;
 
         TH0 h0_;
 

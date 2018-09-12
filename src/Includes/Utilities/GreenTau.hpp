@@ -63,12 +63,13 @@ class GreenCluster0Tau
             {
                 tau -= EPS;
             }
-            size_t s1 = ioModel_.indepSites().at(indepSiteIndex).first;
-            size_t s2 = ioModel_.indepSites().at(indepSiteIndex).second;
-            SiteVectorCD_t greenMat = gfMatCluster_.data().tube(s1, s2);
-            double fm = gfMatCluster_.fm()(s1, s2).real();
-            double sm = gfMatCluster_.sm()(s1, s2).real();
-            double tm = gfMatCluster_.tm()(s1, s2).real();
+            
+            const size_t s1 = ioModel_.indepSites().at(indepSiteIndex).first;
+            const size_t s2 = ioModel_.indepSites().at(indepSiteIndex).second;
+            const SiteVectorCD_t greenMat = gfMatCluster_.data().tube(s1, s2);
+            const double fm = gfMatCluster_.fm()(s1, s2).real();
+            const double sm = gfMatCluster_.sm()(s1, s2).real();
+            const double tm = gfMatCluster_.tm()(s1, s2).real();
             result.at(tt) = Fourier::MatToTauAnalytic(greenMat, tau, beta_, fm, sm, tm);
         }
 

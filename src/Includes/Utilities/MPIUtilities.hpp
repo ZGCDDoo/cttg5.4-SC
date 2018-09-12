@@ -60,7 +60,7 @@ class IOResult
     static void SaveISResults(const std::vector<Result::ISResult> &isResultVec, const double &beta)
     {
         TIOModel ioModel;
-        assert(NWorkers() == int(isResultVec.size()));
+        assert(NWorkers() == static_cast<int>(isResultVec.size()));
         const size_t n_cols = isResultVec.at(0).n_cols_;
         const size_t n_rows = isResultVec.at(0).n_rows_;
         const size_t fillingSize = ioModel.fillingSites().size();
@@ -81,10 +81,11 @@ class IOResult
             fillingResultDown += isResultVec.at(i).fillingDown_;
         }
 
-        greenTabResultUp /= double(NWorkers());
-        greenTabResultDown /= double(NWorkers());
-        fillingResultUp /= double(NWorkers());
-        fillingResultDown /= double(NWorkers());
+        greenTabResultUp /= static_cast<double>(NWorkers());
+        greenTabResultDown /= static_cast<double>(NWorkers());
+        fillingResultUp /= static_cast<double>(NWorkers());
+        fillingResultDown /= static_cast<double>(NWorkers());
+
         //convert the greens to ClusterMatrixCD_t
         ClusterMatrixCD_t greenUp(n_rows, n_cols);
         ClusterMatrixCD_t greenDown(n_rows, n_cols);

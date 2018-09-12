@@ -93,10 +93,6 @@ class GreenCluster0Mat
 
         data_.resize(Nc, Nc, ll);
         data_.zeros();
-        zm_.resize(Nc, Nc);
-        fm_.resize(Nc, Nc);
-        sm_.resize(Nc, Nc);
-        tm_.resize(Nc, Nc);
 
         zm_ = ClusterMatrixCD_t(Nc, Nc).zeros();
         fm_ = ClusterMatrixCD_t(Nc, Nc).eye();
