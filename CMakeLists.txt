@@ -190,7 +190,7 @@ if (${TEST})
     GreenMatTests
     GreenTauTests
     H0TriangleTests
-    HybFMAndTLocTests
+    #HybFMAndTLocTests
     IntegratorTests
     ModelTriangle2x2Tests
     UtilitiesTests

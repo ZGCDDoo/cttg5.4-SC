@@ -196,8 +196,13 @@ class Base_IOModel
     {
         mpiUt::Print("In IOModel ReadNambuDat ");
         assert(filenameVec.size() == 4);
-        ClusterCubeCD_t greenUp = ReadGreenDat(filenameVec.at(0));
-        ClusterCubeCD_t greenDown = ReadGreenDat(filenameVec.at(3));
+
+        const ClusterCubeCD_t greenUp = ReadGreenDat(filenameVec.at(0));
+#ifdef AFM
+        const ClusterCubeCD_t greenDown = ReadGreenDat(filenameVec.at(3));
+#else
+        const ClusterCubeCD_t greenDown = greenUp;
+#endif
 
         const size_t Nc = greenUp.n_rows;
         const size_t NN = greenUp.n_slices;

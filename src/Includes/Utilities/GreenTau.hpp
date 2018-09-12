@@ -45,6 +45,7 @@ class GreenCluster0Tau
         {
             Save("gtau.dat");
         }
+        gfMatCluster_.Clear();
         mpiUt::Print("gtau Created");
     };
 
@@ -54,7 +55,7 @@ class GreenCluster0Tau
 
         for (size_t tt = 0; tt < NTau_ + 1; tt++)
         {
-            Tau_t tau = gfMatCluster_.beta() * (static_cast<double>(tt)) / double(NTau_);
+            Tau_t tau = beta_ * (static_cast<double>(tt)) / static_cast<double>(NTau_);
             if (tt == 0)
             {
                 tau += EPS;
@@ -63,7 +64,7 @@ class GreenCluster0Tau
             {
                 tau -= EPS;
             }
-            
+
             const size_t s1 = ioModel_.indepSites().at(indepSiteIndex).first;
             const size_t s2 = ioModel_.indepSites().at(indepSiteIndex).second;
             const SiteVectorCD_t greenMat = gfMatCluster_.data().tube(s1, s2);
@@ -130,10 +131,10 @@ class GreenCluster0Tau
     GreenCluster0Mat gfMatCluster() const { return gfMatCluster_; };
     size_t NTau() const { return NTau_; };
 
-    void clear()
+    void Clear()
     {
         data_.clear();
-        gfMatCluster_.clear();
+        gfMatCluster_.Clear();
     }
 
     double operator()(const Site_t &s1, const Site_t &s2, const Tau_t &tauIn)
@@ -166,7 +167,7 @@ class GreenCluster0Tau
         return *this;
     }
 
-    void Save(std::string fileName)
+    void Save(const std::string &fileName)
     {
 
         std::ofstream fout(fileName);

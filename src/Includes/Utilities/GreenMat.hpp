@@ -8,22 +8,30 @@ namespace GreenMat
 class HybridizationMat
 {
   public:
-    HybridizationMat() : data_(), fm_(){};
-    HybridizationMat(const ClusterCubeCD_t &data, const ClusterMatrixCD_t &fm) : data_(data), fm_(fm){};
-    HybridizationMat(const HybridizationMat &hyb) : data_(hyb.data_), fm_(hyb.fm_){};
-    ~HybridizationMat()
+    HybridizationMat() : data_(), fm_(), sm_(){};
+    HybridizationMat(const ClusterCubeCD_t &data, const ClusterMatrixCD_t &fm, const ClusterMatrixCD_t &sm = ClusterMatrixCD_t()) : data_(data), fm_(fm), sm_(sm)
+
     {
-        //delete data_;
-        //delete fm_;
-    }
+        if (sm_.n_rows == 0)
+        {
+            sm_ = ClusterMatrixCD_t(fm_.n_rows, fm_.n_cols).zeros();
+        }
+    };
+
+    HybridizationMat(const HybridizationMat &hyb) : data_(hyb.data_), fm_(hyb.fm_), sm_(hyb.sm_){};
+    ~HybridizationMat() = default;
+
     //definit par les moments, et le data qui est determine de facon auto-coherente.
     ClusterMatrixCD_t fm() const { return fm_; };
+    ClusterMatrixCD_t sm() const { return sm_; };
+
     ClusterCubeCD_t data() const { return data_; };
 
-    void clear()
+    void Clear()
     {
         data_.clear();
         fm_.clear();
+        sm_.clear();
     }
 
     size_t n_slices() const
@@ -40,8 +48,10 @@ class HybridizationMat
     {
         if (this == &hyb)
             return *this; //évite les boucles infinies
-        data_ = hyb.data_;
         fm_ = hyb.fm_;
+        sm_ = hyb.sm_;
+        data_ = hyb.data_;
+
         return *this;
     }
 
@@ -53,13 +63,14 @@ class HybridizationMat
         for (size_t nn = n_slices(); nn < NN; nn++)
         {
             cd_t iwn = cd_t(0.0, (2.0 * nn + 1.0) * M_PI / beta);
-            data_.slice(nn) = fm_ / iwn;
+            data_.slice(nn) = fm_ / iwn + sm_ / (iwn * iwn);
         }
     }
 
   private:
     ClusterCubeCD_t data_;
     ClusterMatrixCD_t fm_;
+    ClusterMatrixCD_t sm_;
 };
 
 class GreenCluster0Mat
@@ -108,7 +119,7 @@ class GreenCluster0Mat
         }
     }
 
-    void clear()
+    void Clear()
     {
         data_.clear();
         zm_.clear();
@@ -116,23 +127,21 @@ class GreenCluster0Mat
         sm_.clear();
         tm_.clear();
         tLoc_.clear();
-        hyb_.clear();
+        hyb_.Clear();
     }
 
-    ~GreenCluster0Mat()
-    {
-    }
+    ~GreenCluster0Mat() = default;
 
-    void FourierTransform(const ClusterSites_t &RSites, const ClusterSites_t &KWaveVectors)
-    {
+    // void FourierTransform(const ClusterSites_t &RSites, const ClusterSites_t &KWaveVectors)
+    // {
 
-        //Watch OUT!!! hyb and tloc not fouriertransformed
-        data_ = FourierDCA::KtoR(data_, RSites, KWaveVectors);
-        zm_ = FourierDCA::KtoR(zm_, RSites, KWaveVectors);
-        fm_ = FourierDCA::KtoR(fm_, RSites, KWaveVectors);
-        sm_ = FourierDCA::KtoR(sm_, RSites, KWaveVectors);
-        tm_ = FourierDCA::KtoR(tm_, RSites, KWaveVectors);
-    }
+    //     //Watch OUT!!! hyb and tloc not fouriertransformed
+    //     data_ = FourierDCA::KtoR(data_, RSites, KWaveVectors);
+    //     zm_ = FourierDCA::KtoR(zm_, RSites, KWaveVectors);
+    //     fm_ = FourierDCA::KtoR(fm_, RSites, KWaveVectors);
+    //     sm_ = FourierDCA::KtoR(sm_, RSites, KWaveVectors);
+    //     tm_ = FourierDCA::KtoR(tm_, RSites, KWaveVectors);
+    // }
 
     const GreenCluster0Mat &operator=(const GreenCluster0Mat &gf)
     {
