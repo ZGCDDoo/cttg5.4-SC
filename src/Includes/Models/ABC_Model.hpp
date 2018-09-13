@@ -3,7 +3,6 @@
 #include "../Utilities/Utilities.hpp"
 #include "../Utilities/MPIUtilities.hpp"
 #include "../Utilities/Integrator.hpp"
-#include "../Utilities/GreenMat.hpp"
 #include "../Utilities/NambuMat.hpp"
 #include "../Utilities/IO.hpp"
 #include "HybFMAndTLoc.hpp"
@@ -63,85 +62,28 @@ class ABC_Model_2D
         void FinishConstructor(const Json &jj)
         {
                 const std::string hybNameUp = jj["HybFileUp"].get<std::string>() + ".dat";
-#ifdef DCA
-                ClusterCubeCD_t hybtmpUp = ioModel_.ReadGreenKDat(hybNameUp);
-#else
-                ClusterCubeCD_t hybtmpUp = ioModel_.ReadGreenDat(hybNameUp);
-#endif
 
 #ifdef AFM
                 const std::string hybNameDown = jj["HybFileDown"].get<std::string>() + ".dat";
-                ClusterCubeCD_t hybtmpDown = ioModel_.ReadGreenDat(hybNameDown);
 #endif
 
-                const size_t NHyb = hybtmpUp.n_slices;
+#ifdef AFM
+                const std::vector<std::string> hybNameVec = {hybNameUp, "NULL", "NULL", hybNameDown};
+#else
+                const std::vector<std::string> hybNameVec = {hybNameUp, "NULL", "NULL", "NULL"};
+#endif
+                ClusterCubeCD_t hybNambuData = ioModel_.ReadNambuDat(hybNameVec);
+
+                const size_t NHyb = hybNambuData.n_slices;
                 const double factNHyb = 3.0;
                 const size_t NHyb_HF = std::max<double>(factNHyb * static_cast<double>(NHyb),
                                                         0.5 * (300.0 * beta_ / M_PI - 1.0));
-                hybtmpUp.resize(Nc, Nc, NHyb_HF);
-#ifdef AFM
-                hybtmpDown.resize(Nc, Nc, NHyb_HF);
-#endif
 
-                for (size_t nn = NHyb; nn < NHyb_HF; nn++)
-                {
-                        cd_t iwn(0.0, (2.0 * nn + 1.0) * M_PI / beta_);
-                        hybtmpUp.slice(nn) = hybFM_ / iwn;
-#ifdef AFM
-                        hybtmpDown.slice(nn) = hybtmpUp.slice(nn);
-#endif
-                }
+                hybridizationMat_ = NambuMat::HybridizationMat(hybNambuData, this->hybFM_, ClusterMatrixCD_t());
 
-                this->hybridizationMatUp_ = GreenMat::HybridizationMat(hybtmpUp, this->hybFM_);
+                hybridizationMat_.PatchHF(NHyb_HF, beta_);
 
-#ifdef AFM
-                this->hybridizationMatDown_ = GreenMat::HybridizationMat(hybtmpDown, this->hybFM_);
-#else
-                this->hybridizationMatDown_ = this->hybridizationMatUp_;
-
-#endif
-
-                //this is in fact greencluster tilde.
-                this->greenCluster0MatUp_ = GreenMat::GreenCluster0Mat(this->hybridizationMatUp_, this->tLoc_, this->auxMu(), this->beta_);
-#ifdef DCA
-                greenCluster0MatUp_.FourierTransform(h0_.RSites(), h0_.KWaveVectors());
-#endif
-                //save green0mat
-                if (mpiUt::Rank() == mpiUt::master)
-                {
-                        ioModel_.SaveCube("giwn", this->greenCluster0MatUp_.data(), this->beta_);
-                }
-
-#ifdef AFM
-                this->greenCluster0MatDown_ = GreenMat::GreenCluster0Mat(this->hybridizationMatDown_, this->tLoc_, this->auxMu(), this->beta_);
-
-#else
-                this->greenCluster0MatDown_ = greenCluster0MatUp_;
-#endif
-
-                //Nambu form
-                //For now, set the anormal parts to zero
-                const size_t NN = greenCluster0MatUp_.n_slices();
-                greenNambu0_.resize(2 * Nc, 2 * Nc, NN);
-                greenNambu0_.zeros();
-                hybNambu_ = greenNambu0_;
-
-                using arma::span;
-                greenNambu0_.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = greenCluster0MatUp_.data();
-                greenNambu0_.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = greenCluster0MatDown_.data();
-
-                hybNambu_.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = hybridizationMatUp_.data();
-                hybNambu_.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = hybridizationMatDown_.data();
-
-#ifdef AFM
-                const std::vector<std::string> namevec = {hybNameUp, "0", "0", hybNameDown};
-#else
-                const std::vector<std::string> namevec = {hybNameUp, "0", "0", "0"};
-#endif
-                hybNambu_ = ioModel_.ReadNambuDat(namevec);
-
-                const auto tmphybNambu = NambuMat::HybridizationMat(hybNambu_, this->hybFM_, ClusterMatrixCD_t());
-                const auto tmpGreenNambu = NambuMat::NambuCluster0Mat(tmphybNambu, tLoc_, auxMu(), beta_);
+                //                 nambuCluster0Mat_ = NambuMat::NambuCluster0Mat(hybridizationMat_, tLoc_, auxMu(), beta_);
         }
 
         virtual ~ABC_Model_2D() = 0;
@@ -153,18 +95,8 @@ class ABC_Model_2D
         double beta() const { return beta_; };
         ClusterMatrixCD_t tLoc() const { return tLoc_; };
 
-        GreenMat::GreenCluster0Mat const greenCluster0MatUp() { return greenCluster0MatUp_; };
-        GreenMat::GreenCluster0Mat const greenCluster0MatDown() { return greenCluster0MatDown_; };
-        GreenMat::HybridizationMat const hybridizationMatUp() const { return hybridizationMatUp_; };
-        GreenMat::HybridizationMat const hybridizationMatDown() const { return hybridizationMatDown_; };
-
-        GreenMat::GreenCluster0Mat const FAnromalCluster0MatUp() { return FAnormalCluster0MatUp_; };
-        GreenMat::GreenCluster0Mat const FAnromalCluster0MatDown() { return FAnormalCluster0MatDown_; };
-        GreenMat::HybridizationMat const hybridizationAnormalMatUp() const { return hybridizationAnormalMatUp_; };
-        GreenMat::HybridizationMat const hybridizationAnormalMatDown() const { return hybridizationAnormalMatDown_; };
-
-        ClusterCubeCD_t const greenNambu0() const { return greenNambu0_; };
-        ClusterCubeCD_t const hybNambu() const { return hybNambu_; };
+        NambuMat::NambuCluster0Mat const nambuCluster0Mat() { return nambuCluster0Mat_; };
+        NambuMat::HybridizationMat const hybridizationMat() const { return hybridizationMat_; };
 
         TH0 const h0() { return h0_; };
         TIOModel const ioModel() { return ioModel_; };
@@ -217,18 +149,8 @@ class ABC_Model_2D
       protected:
         TIOModel ioModel_;
 
-        GreenMat::HybridizationMat hybridizationMatUp_;
-        GreenMat::HybridizationMat hybridizationMatDown_;
-        GreenMat::GreenCluster0Mat greenCluster0MatUp_;
-        GreenMat::GreenCluster0Mat greenCluster0MatDown_;
-
-        GreenMat::HybridizationMat hybridizationAnormalMatUp_;
-        GreenMat::HybridizationMat hybridizationAnormalMatDown_;
-        GreenMat::GreenCluster0Mat FAnormalCluster0MatUp_;
-        GreenMat::GreenCluster0Mat FAnormalCluster0MatDown_;
-
-        ClusterCubeCD_t greenNambu0_;
-        ClusterCubeCD_t hybNambu_;
+        NambuMat::HybridizationMat hybridizationMat_;
+        NambuMat::NambuCluster0Mat nambuCluster0Mat_;
 
         TH0 h0_;
 
