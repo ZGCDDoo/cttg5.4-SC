@@ -4,6 +4,7 @@
 #include "../Utilities/MPIUtilities.hpp"
 #include "../Utilities/Integrator.hpp"
 #include "../Utilities/GreenMat.hpp"
+#include "../Utilities/NambuMat.hpp"
 #include "../Utilities/IO.hpp"
 #include "HybFMAndTLoc.hpp"
 
@@ -61,16 +62,16 @@ class ABC_Model_2D
 
         void FinishConstructor(const Json &jj)
         {
-                const std::string hybNameUp = jj["HybFileUp"].get<std::string>();
+                const std::string hybNameUp = jj["HybFileUp"].get<std::string>() + ".dat";
 #ifdef DCA
-                ClusterCubeCD_t hybtmpUp = ioModel_.ReadGreenKDat(hybNameUp + ".dat");
+                ClusterCubeCD_t hybtmpUp = ioModel_.ReadGreenKDat(hybNameUp);
 #else
-                ClusterCubeCD_t hybtmpUp = ioModel_.ReadGreenDat(hybNameUp + ".dat");
+                ClusterCubeCD_t hybtmpUp = ioModel_.ReadGreenDat(hybNameUp);
 #endif
 
 #ifdef AFM
-                const std::string hybNameDown = jj["HybFileDown"].get<std::string>();
-                ClusterCubeCD_t hybtmpDown = ioModel_.ReadGreenDat(hybNameDown + ".dat");
+                const std::string hybNameDown = jj["HybFileDown"].get<std::string>() + ".dat";
+                ClusterCubeCD_t hybtmpDown = ioModel_.ReadGreenDat(hybNameDown);
 #endif
 
                 const size_t NHyb = hybtmpUp.n_slices;
@@ -131,6 +132,16 @@ class ABC_Model_2D
 
                 hybNambu_.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = hybridizationMatUp_.data();
                 hybNambu_.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = hybridizationMatDown_.data();
+
+#ifdef AFM
+                const std::vector<std::string> namevec = {hybNameUp, "0", "0", hybNameDown};
+#else
+                const std::vector<std::string> namevec = {hybNameUp, "0", "0", "0"};
+#endif
+                hybNambu_ = ioModel_.ReadNambuDat(namevec);
+
+                const auto tmphybNambu = NambuMat::HybridizationMat(hybNambu_, this->hybFM_, ClusterMatrixCD_t());
+                const auto tmpGreenNambu = NambuMat::NambuCluster0Mat(tmphybNambu, tLoc_, auxMu(), beta_);
         }
 
         virtual ~ABC_Model_2D() = 0;

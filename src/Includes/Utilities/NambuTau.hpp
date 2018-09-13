@@ -77,7 +77,7 @@ class NambuCluster0Tau
         gfMatCluster_.Clear();
     }
 
-    double operator()(const Site_t &s1, const Site_t &s2, const Tau_t &tauIn, const std::pair<size_t, size_t> nambuIndices)
+    double operator()(const Site_t &s1, const Site_t &s2, const Tau_t &tauIn, const std::pair<size_t, size_t> nambuIndices={0,0})
     {
         double tau = tauIn - EPS;
 
