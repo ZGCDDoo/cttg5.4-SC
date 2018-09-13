@@ -111,8 +111,7 @@ class NambuCluster0Mat
                                                                                                                          beta_(beta)
     {
         assert(2 * tLoc_.n_rows == hyb.data().n_rows);
-        const size_t Nc = hyb_.data().n_rows;
-        const size_t NNambu = 2 * Nc;
+        const size_t NNambu = hyb_.data().n_rows;
         const size_t ll = hyb.data().n_slices;
 
         data_.resize(NNambu, NNambu, ll);
@@ -124,10 +123,17 @@ class NambuCluster0Mat
 
         zm_ = ClusterMatrixCD_t(NNambu, NNambu).zeros();
         fm_ = II;
+        std::cout << "Here" << std::endl;
 
         using arma::kron;
         const ClusterMatrixCD_t tlocNambu = arma::kron(II2x2, tLoc_);
+
+        std::cout << "tlocNambu.n_rows = " << tlocNambu.n_rows << std::endl;
+        std::cout << "II.n_rows = " << II.n_rows << std::endl;
+
         const ClusterMatrixCD_t tmpsm = tlocNambu - mu_ * II;
+        std::cout << "Here 2" << std::endl;
+
         sm_ = tmpsm;
         tm_ = tmpsm * tmpsm + hyb_.fm();
 
