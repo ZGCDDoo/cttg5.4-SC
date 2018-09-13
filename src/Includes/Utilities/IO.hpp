@@ -211,6 +211,7 @@ class Base_IOModel
         cubetmp.zeros();
 
         using arma::span;
+        //for now set anormal parts to zero. Not real nambu yet, only not spin-split.
         cubetmp.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = greenUp;
         cubetmp.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = greenDown;
 
