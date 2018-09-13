@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Utilities/Utilities.hpp"
-#include "../Utilities/GreenTau.hpp"
+#include "../Utilities/NambuTau.hpp"
 #include "../Utilities/Matrix.hpp"
 
 // #if defined(SUBMATRIX)
@@ -44,7 +44,7 @@ using namespace LinAlg;
 template <typename TIOModel, typename TModel>
 class ISDataCT
 {
-  using GreenTau_t = GreenTau::GreenCluster0Tau<TIOModel>;
+  using NambuTau_t = NambuTau::NambuCluster0Tau<TIOModel>;
 
 public:
   ISDataCT(const double &beta, TModel model, const size_t &NTau) : MPtr_(new Matrix_t()),
@@ -53,8 +53,7 @@ public:
                                                                    sign_(1)
 
   {
-    green0CachedUp_ = GreenTau::GreenCluster0Tau<TIOModel>(model.greenCluster0MatUp(), NTau);
-    green0CachedDown_ = GreenTau::GreenCluster0Tau<TIOModel>(model.greenCluster0MatDown(), NTau);
+    nambu0Cached_ = NambuTau::NambuCluster0Tau<TIOModel>(model.nambuCluster0Mat(), NTau);
   }
 
   double beta() const { return beta_; };
@@ -71,8 +70,7 @@ private:
   friend class Markov::ABC_MarkovChain<TIOModel, TModel>;
 #endif
 
-  GreenTau_t green0CachedUp_; //what the hell, this should be const. Better, Moved to Model Shit Fuck
-  GreenTau_t green0CachedDown_;
+  NambuTau_t nambu0Cached_; //what the hell, this should be const. Better, Moved to Model Shit Fuck
   std::shared_ptr<Matrix_t> MPtr_;
   std::vector<Vertex> vertices_;
   const double beta_;

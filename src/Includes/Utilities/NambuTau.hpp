@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GreenMat.hpp"
+#include "NambuMat.hpp"
 #include "Fourier.hpp"
 #include "Utilities.hpp"
 #include "MPIUtilities.hpp"
@@ -9,8 +9,7 @@
 namespace NambuTau
 {
 
-using namespace GreenMat;
-using Vector_t = std::vector<double>;
+using namespace NambuMat;
 using Data_t = ClusterCube_t;
 
 template <typename TIOModel>
@@ -25,8 +24,8 @@ class NambuCluster0Tau
     NambuCluster0Tau() : nambuMatCluster_(), beta_(), NTau_(){};
 
     NambuCluster0Tau(const NambuCluster0Mat &nambuMatCluster, const size_t &NTau) : ioModel_(),
-                                                                                    nambuMatCluster_(gfMatCluster),
-                                                                                    beta_(gfMatCluster.beta()),
+                                                                                    nambuMatCluster_(nambuMatCluster),
+                                                                                    beta_(nambuMatCluster.beta()),
                                                                                     NTau_()
     {
         mpiUt::Print("Creating gtau very inefficiently !!!!! ");
@@ -48,13 +47,7 @@ class NambuCluster0Tau
                 tau -= EPS;
             }
 
-            for (size_t ii = 0; ii < nambuMatCluster_.n_rows(); ii++)
-            {
-                for (size_t jj = 0; jj < nambuMatCluster_.n_cols(); jj++)
-                {
-                    data_.slice(tt) = Fourier::MatToTauCluster(nambuMatCluster_, tau);
-                }
-            }
+            data_.slice(tt) = Fourier::MatToTauCluster(nambuMatCluster_, tau);
         }
 
         if (mpiUt::Rank() == mpiUt::master)
@@ -62,22 +55,22 @@ class NambuCluster0Tau
             Save("gtau.dat");
         }
 
-        gfMatCluster_.Clear();
+        nambuMatCluster_.Clear();
         mpiUt::Print("gtau Created");
     };
 
-    ~GreenCluster0Tau() = default;
+    ~NambuCluster0Tau() = default;
 
-    GreenCluster0Mat nambuMatCluster() const { return nambuMatCluster_; };
+    NambuCluster0Mat nambuMatCluster() const { return nambuMatCluster_; };
     size_t NTau() const { return NTau_; };
 
     void Clear()
     {
         data_.clear();
-        gfMatCluster_.Clear();
+        nambuMatCluster_.Clear();
     }
 
-    double operator()(const Site_t &s1, const Site_t &s2, const Tau_t &tauIn, const std::pair<size_t, size_t> nambuIndices={0,0})
+    double operator()(const Site_t &s1, const Site_t &s2, const Tau_t &tauIn, const std::pair<size_t, size_t> nambuIndices = {0, 0})
     {
         double tau = tauIn - EPS;
 
@@ -93,16 +86,16 @@ class NambuCluster0Tau
         const size_t n0 = static_cast<size_t>(nt);
         const size_t r1 = s1 + nambuIndices.first * ioModel_.Nc;
         const size_t r2 = s2 + nambuIndices.second * ioModel_.Nc;
-
+        // std::cout << "data_.n_rows = " << data_.n_rows << std::endl;
         const double greentau0 = aps * ((1.0 - (nt - n0)) * data_(r1, r2, n0) + (nt - n0) * data_(r1, r2, n0 + 1));
         return greentau0;
     }
 
-    const GreenCluster0Tau &operator=(const GreenCluster0Tau &gf)
+    const NambuCluster0Tau &operator=(const NambuCluster0Tau &gf)
     {
         if (this == &gf)
             return *this; //évite les boucles infinies
-        gfMatCluster_ = gf.gfMatCluster_;
+        nambuMatCluster_ = gf.nambuMatCluster_;
         NTau_ = gf.NTau_;
         beta_ = gf.beta_;
         data_ = gf.data_;
@@ -117,7 +110,7 @@ class NambuCluster0Tau
 
   private:
     TIOModel ioModel_;
-    GreenCluster0Mat nambuMatCluster_;
+    NambuCluster0Mat nambuMatCluster_;
     Data_t data_;
     double beta_;
     size_t NTau_;

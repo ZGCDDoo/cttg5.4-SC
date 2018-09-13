@@ -83,7 +83,7 @@ class ABC_Model_2D
 
                 hybridizationMat_.PatchHF(NHyb_HF, beta_);
 
-                //                 nambuCluster0Mat_ = NambuMat::NambuCluster0Mat(hybridizationMat_, tLoc_, auxMu(), beta_);
+                nambuCluster0Mat_ = NambuMat::NambuCluster0Mat(hybridizationMat_, tLoc_, auxMu(), beta_);
         }
 
         virtual ~ABC_Model_2D() = 0;

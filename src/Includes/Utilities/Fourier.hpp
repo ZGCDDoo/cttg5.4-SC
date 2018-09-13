@@ -1,6 +1,5 @@
 #pragma once
 #include "Utilities.hpp"
-#include "GreenMat.hpp"
 
 namespace Fourier
 {
@@ -40,7 +39,8 @@ double MatToTauAnalytic(SiteVectorCD_t greenMat, const double &tau, const double
     return result;
 }
 
-ClusterMatrix_t MatToTauCluster(const GreenMat::GreenCluster0Mat &greenCluster0Mat, const double &tau)
+template <typename T>
+ClusterMatrix_t MatToTauCluster(const T &greenCluster0Mat, const double &tau)
 {
 
     ClusterCubeCD_t dataMat = greenCluster0Mat.data();

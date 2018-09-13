@@ -282,13 +282,13 @@ class ABC_MarkovChain
 
     double GetGreenTau0Up(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-        return (dataCT_->green0CachedUp_(vertexI.site(), vertexJ.site(), vertexI.tau() - vertexJ.tau()));
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), vertexI.tau() - vertexJ.tau(), {0, 0}));
     }
 
     // In fact return -g_Down(-tau) (nambu version of gdown)
     double GetGreenTau0Down(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-        return (dataCT_->green0CachedDown_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau())));
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {1, 1}));
     }
 
     double GetFTau0DownUp(const Vertex &vertexI, const Vertex &vertexJ) const
@@ -305,15 +305,15 @@ class ABC_MarkovChain
     {
         SiteVector_t FVM1 = -(nfdata_.F_ - 1.0);
         DDMGMM(FVM1, nfdata_.N_, *(dataCT_->MPtr_));
-        obs_.Measure();
+        // obs_.Measure();
     }
 
     void SaveMeas()
     {
 
-        obs_.Save();
-        mpiUt::SaveConfig(dataCT_->vertices_);
-        SaveUpd("upd.meas");
+        // obs_.Save();
+        // mpiUt::SaveConfig(dataCT_->vertices_);
+        // SaveUpd("upd.meas");
     }
 
     void SaveTherm()
