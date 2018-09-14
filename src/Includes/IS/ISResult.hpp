@@ -9,6 +9,7 @@
 #include <valarray>
 
 #include "../Utilities/MPIUtilities.hpp"
+#include "../Utilities/Utilities.hpp"
 
 namespace mpiUt
 {
@@ -19,8 +20,8 @@ class IOResult;
 namespace Result
 {
 
-using ClusterMatrixCD_t = arma::cx_mat;
-using cd_t = std::complex<double>;
+using DataCD_t = std::valarray<cd_t>;
+using Data_t = std::valarray<double>;
 
 class ISResult
 {
@@ -28,33 +29,16 @@ class ISResult
   public:
     ISResult(){};
 
-    ISResult(const std::map<std::string, double> &obsScal, const ClusterMatrixCD_t &greenMatUp,
-             const ClusterMatrixCD_t &greenMatDown, const std::vector<double> &fillingUp,
-             const std::vector<double> &fillingDown) : obsScal_(obsScal),
-                                                       n_rows_(greenMatUp.n_rows),
-                                                       n_cols_(greenMatUp.n_cols),
-                                                       greenTabUp_(n_rows_ * n_cols_),
-#ifdef AFM
-
-                                                       greenTabDown_(n_rows_ * n_cols_),
-#endif
-                                                       fillingUp_(fillingUp.data(), fillingUp.size()),
-                                                       fillingDown_(fillingDown.data(), fillingDown.size())
+    ISResult(const std::map<std::string, double> &obsScal, const ClusterCubeCD_t &nambu,
+             const std::vector<double> &fillingUp, const std::vector<double> &fillingDown) : obsScal_(obsScal),
+                                                                                             n_rows_(nambu.n_rows),
+                                                                                             n_cols_(nambu.n_cols),
+                                                                                             n_slices_(nambu.n_cols),
+                                                                                             nambu_(),
+                                                                                             fillingUp_(fillingUp.data(), fillingUp.size()),
+                                                                                             fillingDown_(fillingDown.data(), fillingDown.size())
     {
-        assert(greenMatDown.n_rows == n_rows_);
-#ifdef AFM
-        assert(greenMatDown.n_cols == n_cols_);
-#endif
-        for (size_t j = 0; j < n_cols_; j++)
-        {
-            for (size_t i = 0; i < n_rows_; i++)
-            {
-                greenTabUp_[i + n_rows_ * j] = greenMatUp(i, j);
-#ifdef AFM
-                greenTabDown_[i + n_rows_ * j] = greenMatDown(i, j);
-#endif
-            }
-        }
+        nambu_ = Utilities::CubeCDToVecCD<DataCD_t>(nambu);
     }
 
   private:
@@ -76,8 +60,8 @@ class ISResult
         ar &obsScal_;
         ar &n_rows_;
         ar &n_cols_;
-        ar &greenTabUp_;
-        ar &fillingUp_;
+        ar &n_slices_;
+        ar &nambu_;
         ar &fillingDown_;
 #ifdef AFM
         ar &greenTabDown_;
@@ -85,16 +69,12 @@ class ISResult
     }
 
     std::map<std::string, double> obsScal_;
-    size_t n_rows_; //=NMat
-    size_t n_cols_; //=Number of independant green functions of the model at hand.
+    size_t n_rows_;
+    size_t n_cols_;
+    size_t n_slices_;
 
-    std::valarray<std::complex<double>> greenTabUp_; //the green in tabular form
-                                                     //corresponding to the independant values, in vector form.
-                                                     //col .major ordering
-#ifdef AFM
-    std::valarray<std::complex<double>> greenTabDown_;
-#endif
-    std::valarray<double> fillingUp_;
-    std::valarray<double> fillingDown_;
+    DataCD_t nambu_;
+    Data_t fillingUp_;
+    Data_t fillingDown_;
 };
 } // namespace Result

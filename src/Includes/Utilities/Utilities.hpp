@@ -120,8 +120,55 @@ class Vertex
 	AuxSpin_t aux_;
 };
 
-class VertexBuilder
+template <typename T>
+T CubeCDToVecCD(const ClusterCubeCD_t &cubeCD)
 {
-};
+	// Print("start CubeCDToVecCD");
 
+	T vecCD;
+	const size_t nrows = cubeCD.n_rows;
+	const size_t ncols = cubeCD.n_cols;
+	const size_t nslices = cubeCD.n_slices;
+	vecCD.resize(cubeCD.n_elem, cd_t(0.0));
+
+	for (size_t ii = 0; ii < nrows; ii++)
+	{
+		for (size_t jj = 0; jj < ncols; jj++)
+		{
+			for (size_t kk = 0; kk < nslices; kk++)
+			{
+				const size_t index = ii + jj * nrows + (nrows * ncols) * kk;
+				vecCD[index] = cubeCD(ii, jj, kk);
+			}
+		}
+	}
+
+	// Print("End CubeCDToVecCD");
+	return vecCD;
+}
+
+template <typename T>
+ClusterCubeCD_t VecCDToCubeCD(T &vecCD, const size_t &nrows, const size_t &ncols, const size_t &nslices)
+{
+	// Print("start VecCDToCubeCD");
+
+	ClusterCubeCD_t cubeCD(nrows, ncols, nslices);
+	cubeCD.zeros();
+
+	for (size_t ii = 0; ii < nrows; ii++)
+	{
+		for (size_t jj = 0; jj < ncols; jj++)
+		{
+			for (size_t kk = 0; kk < nslices; kk++)
+			{
+				const size_t index = ii + jj * nrows + (nrows * ncols) * kk;
+				cubeCD(ii, jj, kk) = vecCD[index];
+			}
+		}
+	}
+
+	// Print("End VecCDToCubeCD");
+
+	return cubeCD;
+}
 } // namespace Utilities

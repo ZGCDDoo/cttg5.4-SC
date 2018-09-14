@@ -72,10 +72,10 @@ class Observables
                 const double fact = 1.0 / (NMeas_ * signMeas_);
                 obsScal["k"] = fact * expOrder_;
 
-                const ClusterMatrixCD_t greenNambu = ioModel_.FullCubeToIndep(greenBinning_.FinalizeGreenBinning(signMeas_, NMeas_));
+                const ClusterCubeCD_t greenNambuCube = greenBinning_.FinalizeGreenBinning(signMeas_, NMeas_);
 
                 //Gather and stats of all the results for all cores
-                Result::ISResult isResult(obsScal, greenNambu, greenNambu, fillingAndDocc_.fillingUp(), fillingAndDocc_.fillingDown());
+                Result::ISResult isResult(obsScal, greenNambuCube, fillingAndDocc_.fillingUp(), fillingAndDocc_.fillingDown());
                 std::vector<Result::ISResult> isResultVec;
 #ifdef HAVEMPI
 

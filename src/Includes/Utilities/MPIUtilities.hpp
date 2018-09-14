@@ -61,51 +61,31 @@ class IOResult
     {
         TIOModel ioModel;
         assert(NWorkers() == static_cast<int>(isResultVec.size()));
-        const size_t n_cols = isResultVec.at(0).n_cols_;
-        const size_t n_rows = isResultVec.at(0).n_rows_;
-        const size_t fillingSize = ioModel.fillingSites().size();
-        std::valarray<cd_t> greenTabResultUp(cd_t(0.0, 0.0), n_rows * n_cols);
-        std::valarray<cd_t> greenTabResultDown(cd_t(0.0, 0.0), n_rows * n_cols);
-        std::valarray<double> fillingResultUp(0.0, fillingSize);
-        std::valarray<double> fillingResultDown(0.0, fillingSize);
+
+        std::valarray<cd_t> nambuResult = isResultVec.at(0).nambu_;
+        std::valarray<double> fillingResultUp = isResultVec.at(0).fillingUp_;
+        std::valarray<double> fillingResultDown = isResultVec.at(0).fillingDown_;
 
         //Average the greens of matsubara, and the fillingsSigma_.
-        for (int i = 0; i < NWorkers(); i++)
+        for (int i = 1; i < NWorkers(); i++)
         {
-            greenTabResultUp += isResultVec.at(i).greenTabUp_;
+            nambuResult += isResultVec.at(i).nambu_;
 
-#ifdef AFM
-            greenTabResultDown += isResultVec.at(i).greenTabDown_;
-#endif
             fillingResultUp += isResultVec.at(i).fillingUp_;
             fillingResultDown += isResultVec.at(i).fillingDown_;
         }
 
-        greenTabResultUp /= static_cast<double>(NWorkers());
-        greenTabResultDown /= static_cast<double>(NWorkers());
+        nambuResult /= static_cast<double>(NWorkers());
         fillingResultUp /= static_cast<double>(NWorkers());
         fillingResultDown /= static_cast<double>(NWorkers());
 
         //convert the greens to ClusterMatrixCD_t
-        ClusterMatrixCD_t greenUp(n_rows, n_cols);
-        ClusterMatrixCD_t greenDown(n_rows, n_cols);
-        for (size_t j = 0; j < n_cols; j++)
-        {
-            for (size_t i = 0; i < n_rows; i++)
-            {
-                greenUp(i, j) = greenTabResultUp[i + n_rows * j];
-#ifdef AFM
-                greenDown(i, j) = greenTabResultDown[i + n_rows * j];
-#endif
-            }
-        }
-        //greenUp.print();
-        //greenDown.print();
-        const size_t PRECISION_OUT = 10;
-        SaveTabular("greenUp", greenUp, beta, PRECISION_OUT, false);
-#ifdef AFM
-        SaveTabular("greenDown", greenDown, beta, PRECISION_OUT, false);
-#endif
+        const size_t n_rows = isResultVec.at(0).n_rows_;
+        const size_t n_cols = isResultVec.at(0).n_cols_;
+        const size_t n_slices = isResultVec.at(0).n_slices_;
+
+        const ClusterCubeCD_t nambuResultCube = Utilities::VecCDToCubeCD<std::valarray<cd_t>>(nambuResult, n_rows, n_cols, n_slices);
+        ioModel.SaveCube("greenUp.dat", nambuResultCube, beta);
 
         //Average the obsScale_
         SaveFillingMatrixs(fillingResultUp, fillingResultDown);
@@ -157,38 +137,6 @@ class IOResult
         fout << std::setw(4) << jjResult << std::endl;
         fout.close();
 
-        return;
-    }
-
-    static void SaveTabular(const std::string &fname, const ClusterMatrixCD_t &greenTab, const double &beta,
-                            const size_t &precision = 10, const bool &saveArma = false)
-    {
-
-        std::ofstream fout;
-        fout.open(fname + std::string(".dat"), std::ios::out);
-
-        for (size_t nn = 0; nn < greenTab.n_rows; nn++)
-        {
-            const double iwn = (2.0 * nn + 1.0) * M_PI / beta;
-            fout << std::setprecision(precision) << iwn << " ";
-
-            for (Site_t ii = 0; ii < greenTab.n_cols; ii++)
-            {
-
-                fout << std::setprecision(precision) << greenTab(nn, ii).real()
-                     << " "
-                     << std::setprecision(precision) << greenTab(nn, ii).imag()
-                     << " ";
-            }
-            fout << "\n";
-        }
-
-        fout.close();
-
-        if (saveArma)
-        {
-            assert(greenTab.save(fname + std::string(".arma"), arma::arma_ascii));
-        }
         return;
     }
 
@@ -303,56 +251,6 @@ bool LoadConfig(std::vector<Utilities::Vertex> &vertices)
     // std::cout << "Config = " << std::endl;
     //config.print();
     return true;
-}
-
-std::vector<cd_t> CubeCDToVecCD(const ClusterCubeCD_t &cubeCD)
-{
-    // Print("start CubeCDToVecCD");
-
-    std::vector<cd_t> vecCD;
-    const size_t nrows = cubeCD.n_rows;
-    const size_t ncols = cubeCD.n_cols;
-    const size_t nslices = cubeCD.n_slices;
-    vecCD.resize(cubeCD.n_elem, cd_t(0.0));
-
-    for (size_t ii = 0; ii < nrows; ii++)
-    {
-        for (size_t jj = 0; jj < ncols; jj++)
-        {
-            for (size_t kk = 0; kk < nslices; kk++)
-            {
-                const size_t index = ii + jj * nrows + (nrows * ncols) * kk;
-                vecCD.at(index) = cubeCD(ii, jj, kk);
-            }
-        }
-    }
-
-    // Print("End CubeCDToVecCD");
-    return vecCD;
-}
-
-ClusterCubeCD_t VecCDToCubeCD(std::vector<cd_t> &vecCD, const size_t &nrows, const size_t &ncols, const size_t &nslices)
-{
-    // Print("start VecCDToCubeCD");
-
-    ClusterCubeCD_t cubeCD(nrows, ncols, nslices);
-    cubeCD.zeros();
-
-    for (size_t ii = 0; ii < nrows; ii++)
-    {
-        for (size_t jj = 0; jj < ncols; jj++)
-        {
-            for (size_t kk = 0; kk < nslices; kk++)
-            {
-                const size_t index = ii + jj * nrows + (nrows * ncols) * kk;
-                cubeCD(ii, jj, kk) = vecCD.at(index);
-            }
-        }
-    }
-
-    // Print("End VecCDToCubeCD");
-
-    return cubeCD;
 }
 
 } //namespace mpiUt
