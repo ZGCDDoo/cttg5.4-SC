@@ -220,6 +220,9 @@ class Base_IOModel
 
     void SaveCube(const std::string &fname, const ClusterCubeCD_t &green, const double &beta, const size_t &precision = 10, const bool &saveArma = false) const
     {
+
+        //Save In Nambu form first;
+        green.save(fname + "Nambu.arma");
         const size_t NMat = green.n_slices;
         ClusterMatrixCD_t greenOut(NMat, this->indepSites_.size());
 

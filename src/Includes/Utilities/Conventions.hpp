@@ -34,6 +34,10 @@ MapSS_t BuildFileNameConventions()
     nameCon["hybUpFile"] = "hybNextUp" + datExt;
     nameCon["hybDownFile"] = "hybNextDown" + datExt;
 
+    nameCon["greenNambuFile"] = "greenNambu" + armaExt; //saved in .arma format, binary
+    nameCon["selfNambuFile"] = "selfNambu" + armaExt;
+    nameCon["hybNambuFile"] = "hybNambu" + armaExt;
+
     nameCon["obsJsonFile"] = "Obs" + jsonExt;
     nameCon["updMeasJsonFile"] = "upd.meas" + jsonExt;
     nameCon["updThermJsonFile"] = "upd.therm" + jsonExt;

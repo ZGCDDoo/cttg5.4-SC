@@ -57,9 +57,11 @@ void PrepareNextIter(const std::string paramsName, const size_t &iter)
     using boost::filesystem::copy_file;
     const std::string ext = ".dat";
 
-    copy_file("hybNextUp.dat", std::string("hybUp") + std::to_string(iter + 1) + ext);
-    copy_file("selfUp.dat", std::string("selfUp") + std::to_string(iter) + ext);
-    copy_file("greenUp.dat", std::string("greenUp") + std::to_string(iter) + ext);
+    copy_file("hybNext.dat", std::string("hybUp") + std::to_string(iter + 1) + ext);
+    copy_file("hybNextNambu.arma", std::string("hybNambu") + std::to_string(iter + 1) + ".arma");
+
+    copy_file("self.dat", std::string("self") + std::to_string(iter) + ext);
+    copy_file("green.dat", std::string("greenUp") + std::to_string(iter) + ext);
     copy_file("Obs.json", std::string("Obs") + std::to_string(iter) + ".json");
     copy_file("upd.meas.json", std::string("upd.meas") + std::to_string(iter) + ".json");
     copy_file("gtau.dat", std::string("g0tau") + std::to_string(iter) + ext);
@@ -109,5 +111,5 @@ void PrepareNextIter(const std::string paramsName, const size_t &iter)
     return;
 }
 
-} //namespace IO
-} //namespace FS
+} // namespace FS
+} // namespace IO

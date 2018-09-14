@@ -6,6 +6,7 @@
 #include "../Utilities/NambuMat.hpp"
 #include "../Utilities/IO.hpp"
 #include "HybFMAndTLoc.hpp"
+// #include "../Utilities/Conventions.hpp"
 
 using Vertex = Utilities::Vertex;
 
@@ -61,18 +62,12 @@ class ABC_Model_2D
 
         void FinishConstructor(const Json &jj)
         {
-                const std::string hybNameUp = jj["HybFileUp"].get<std::string>() + ".dat";
 
-#ifdef AFM
-                const std::string hybNameDown = jj["HybFileDown"].get<std::string>() + ".dat";
-#endif
-
-#ifdef AFM
-                const std::vector<std::string> hybNameVec = {hybNameUp, "NULL", "NULL", hybNameDown};
-#else
-                const std::vector<std::string> hybNameVec = {hybNameUp, "NULL", "NULL", "NULL"};
-#endif
-                ClusterCubeCD_t hybNambuData = ioModel_.ReadNambuDat(hybNameVec);
+                ClusterCubeCD_t hybNambuData;
+                if (!hybNambuData.load("hybNambu.arma"))
+                {
+                        hybNambuData = ClusterCubeCD_t(2 * Nc, 2 * Nc, 1).zeros();
+                }
 
                 const size_t NHyb = hybNambuData.n_slices;
                 const double factNHyb = 3.0;
