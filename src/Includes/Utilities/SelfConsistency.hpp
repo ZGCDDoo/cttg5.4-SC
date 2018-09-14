@@ -232,6 +232,10 @@ class SelfConsistency : public ABC_SelfConsistency
             size_t ktildepts = tKTildeGrid.n_slices;
 
             const ClusterMatrixCD_t II2 = ClusterMatrixCD_t(2, 2).eye();
+            const ClusterMatrixCD_t tLocNambu = arma::kron(ClusterMatrixCD_t(2, 2).eye(), model_.tLoc());
+
+            std::cout << "Here 1" << std::endl;
+
             for (size_t nn = 0; nn < NSelfCon; nn++)
             {
                 const cd_t zz = cd_t(model_.mu(), (2.0 * static_cast<double>(nn) + 1.0) * M_PI / model_.beta());
@@ -241,8 +245,9 @@ class SelfConsistency : public ABC_SelfConsistency
                     gImpUpNext.slice(nn) += ((zz * IINambu - tkTildeGridNambu - selfEnergy_.slice(nn)).i());
                 }
                 gImpUpNext /= static_cast<double>(ktildepts);
-                hybNext_.slice(nn) = -gImpUpNext.slice(nn).i() - selfEnergy_.slice(nn) + zz * ClusterMatrixCD_t(Nc, Nc).eye() - model_.tLoc();
+                hybNext_.slice(nn) = -gImpUpNext.slice(nn).i() - selfEnergy_.slice(nn) + zz * IINambu - tLocNambu;
             }
+            std::cout << "Here 2 " << std::endl;
 
             hybNext_ *= (1.0 - weights_);
             hybNext_ += weights_ * hybridization_.data();
