@@ -5,7 +5,7 @@
 namespace SelfCon
 {
 
-std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj, const FermionSpin_t &spin)
+std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj)
 {
     const std::string modelType = jj["modelType"].get<std::string>();
 
@@ -20,17 +20,11 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj, cons
         IOModel_t ioModel;
 
         ClusterCubeCD_t greenImpurity;
-        if (spin == FermionSpin_t::Up)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenUp.dat");
-        }
-        else if (spin == FermionSpin_t::Down)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenDown.dat");
-        }
+
+        greenImpurity = ioModel.ReadGreenDat("greenDown.dat");
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
-        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity, spin));
+        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
     }
     else if (modelType == "Square2x2")
     {
@@ -43,17 +37,11 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj, cons
         IOModel_t ioModel;
 
         ClusterCubeCD_t greenImpurity;
-        if (spin == FermionSpin_t::Up)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenUp.dat");
-        }
-        else if (spin == FermionSpin_t::Down)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenDown.dat");
-        }
+
+        greenImpurity = ioModel.ReadGreenDat("nambu.dat");
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
-        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity, spin));
+        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
     }
     else if (modelType == "Triangle2x2")
     {
@@ -66,17 +54,11 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj, cons
         IOModel_t ioModel;
 
         ClusterCubeCD_t greenImpurity;
-        if (spin == FermionSpin_t::Up)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenUp.dat");
-        }
-        else if (spin == FermionSpin_t::Down)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenDown.dat");
-        }
+
+        greenImpurity = ioModel.ReadGreenDat("nambu.dat");
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
-        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity, spin));
+        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
     }
     else if (modelType == "Square4x4")
     {
@@ -89,17 +71,11 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj, cons
         IOModel_t ioModel;
 
         ClusterCubeCD_t greenImpurity;
-        if (spin == FermionSpin_t::Up)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenUp.dat");
-        }
-        else if (spin == FermionSpin_t::Down)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenDown.dat");
-        }
+
+        greenImpurity = ioModel.ReadGreenDat("nambu.dat");
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
-        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity, spin));
+        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
     }
     else if (modelType == "Square6x6")
     {
@@ -112,17 +88,11 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj, cons
         IOModel_t ioModel;
 
         ClusterCubeCD_t greenImpurity;
-        if (spin == FermionSpin_t::Up)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenUp.dat");
-        }
-        else if (spin == FermionSpin_t::Down)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenDown.dat");
-        }
+
+        greenImpurity = ioModel.ReadGreenDat("nambu.dat");
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
-        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity, spin));
+        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
     }
     else if (modelType == "Square8x8")
     {
@@ -135,17 +105,11 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj, cons
         IOModel_t ioModel;
 
         ClusterCubeCD_t greenImpurity;
-        if (spin == FermionSpin_t::Up)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenUp.dat");
-        }
-        else if (spin == FermionSpin_t::Down)
-        {
-            greenImpurity = ioModel.ReadGreenDat("greenDown.dat");
-        }
+
+        greenImpurity = ioModel.ReadGreenDat("nambu.dat");
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
-        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity, spin));
+        return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
     }
 
     return NULL;

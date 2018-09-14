@@ -44,7 +44,7 @@ class SelfConsistency : public ABC_SelfConsistency
     static const ClusterMatrixCD_t II;
     static const ClusterMatrixCD_t IINambu;
 
-    static const double factNSelfCon;
+    const double factNSelfCon = 2.0;
     const size_t hybSavePrecision = 10;
 
     SelfConsistency(const Json &jj, const TModel &model, const ClusterCubeCD_t &nambuImpurity) : model_(model),
@@ -58,7 +58,7 @@ class SelfConsistency : public ABC_SelfConsistency
 
         mpiUt::Print("Start of SC constructor");
 
-        const size_t NGreen = greenImpurity_.n_slices;
+        const size_t NGreen = nambuImpurity_.n_slices;
         size_t NSelfConTmp = NGreen; //std::max<double>(0.5 * (jj["ESelfCon"].get<double>() * model_.beta() / M_PI - 1.0),
                                      //               0.5 * (200.0 * model_.beta() / M_PI - 1.0));
         if (NGreen >= NSelfConTmp)
@@ -113,7 +113,7 @@ class SelfConsistency : public ABC_SelfConsistency
 
         if (mpiUt::Rank() == mpiUt::master)
         {
-            ioModel_.SaveCube("self" + GetSpinName(spin_), selfEnergy_, model_.beta(), hybSavePrecision);
+            ioModel_.SaveCube("self", selfEnergy_, model_.beta(), hybSavePrecision);
             std::cout << "In Selfonsistency constructor, after save selfenery " << std::endl;
         }
 
@@ -206,7 +206,7 @@ class SelfConsistency : public ABC_SelfConsistency
 
             hybNext_ *= (1.0 - weights_);
             hybNext_ += weights_ * hybridization_.data();
-            ioModel_.SaveCube("green" + GetSpinName(spin_), gImpUpNext, model_.beta(), hybSavePrecision);
+            ioModel_.SaveCube("green", gImpUpNext, model_.beta(), hybSavePrecision);
             ioModel_.SaveCube("hybNext" + GetSpinName(spin_), hybNext_, model_.beta(), hybSavePrecision);
 
             mpiUt::Print("After Selfonsistency DOSC Parallel");
@@ -222,28 +222,32 @@ class SelfConsistency : public ABC_SelfConsistency
         {
             std::cout << "In Selfonsistency DOSC serial" << std::endl;
             const size_t NSelfCon = selfEnergy_.n_slices;
-            ClusterCubeCD_t gImpUpNext(Nc, Nc, NSelfCon);
+            const size_t NNambu = 2 * Nc;
+            ClusterCubeCD_t gImpUpNext(NNambu, NNambu, NSelfCon);
             gImpUpNext.zeros();
-            hybNext_.resize(Nc, Nc, NSelfCon);
+            hybNext_.resize(NNambu, NNambu, NSelfCon);
             hybNext_.zeros();
             ClusterCubeCD_t tKTildeGrid;
             assert(tKTildeGrid.load("tktilde.arma"));
             size_t ktildepts = tKTildeGrid.n_slices;
 
+            const ClusterMatrixCD_t II2 = ClusterMatrixCD_t(2, 2).eye();
             for (size_t nn = 0; nn < NSelfCon; nn++)
             {
                 const cd_t zz = cd_t(model_.mu(), (2.0 * static_cast<double>(nn) + 1.0) * M_PI / model_.beta());
                 for (size_t ktildeindex = 0; ktildeindex < ktildepts; ktildeindex++)
                 {
-                    gImpUpNext.slice(nn) += 1.0 / (static_cast<double>(ktildepts)) * ((zz * ClusterMatrixCD_t(Nc, Nc).eye() - tKTildeGrid.slice(ktildeindex) - selfEnergy_.slice(nn)).i());
+                    const ClusterMatrixCD_t tkTildeGridNambu = arma::kron(II2, tKTildeGrid.slice(ktildeindex));
+                    gImpUpNext.slice(nn) += ((zz * IINambu - tkTildeGridNambu - selfEnergy_.slice(nn)).i());
                 }
+                gImpUpNext /= static_cast<double>(ktildepts);
                 hybNext_.slice(nn) = -gImpUpNext.slice(nn).i() - selfEnergy_.slice(nn) + zz * ClusterMatrixCD_t(Nc, Nc).eye() - model_.tLoc();
             }
 
             hybNext_ *= (1.0 - weights_);
             hybNext_ += weights_ * hybridization_.data();
-            ioModel_.SaveCube("green" + GetSpinName(spin_), gImpUpNext, model_.beta(), hybSavePrecision);
-            ioModel_.SaveCube("hybNext" + GetSpinName(spin_), hybNext_, model_.beta(), hybSavePrecision);
+            ioModel_.SaveCube("green", gImpUpNext, model_.beta(), hybSavePrecision);
+            ioModel_.SaveCube("hybNext", hybNext_, model_.beta(), hybSavePrecision);
 
             std::cout << "After Selfonsistency DOSC serial" << std::endl;
         }
@@ -273,8 +277,5 @@ const ClusterMatrixCD_t SelfConsistency<TIOModel, TModel, TH0>::IINambu = Cluste
 
 template <typename TIOModel, typename TModel, typename TH0>
 const size_t SelfConsistency<TIOModel, TModel, TH0>::Nc = TH0::Nc;
-
-template <typename TIOModel, typename TModel, typename TH0>
-const double SelfConsistency<TIOModel, TModel, TH0>::factNSelfCon = 2;
 
 } // namespace SelfCon
