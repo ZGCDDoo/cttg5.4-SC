@@ -85,7 +85,7 @@ class GreenBinning
         const size_t LL = ioModel_.indepSites().size();
         ClusterMatrixCD_t indep_M_matsubara_sampled(NAMBU_SIZE, 2 * LL);
         SiteVectorCD_t temp_matsubara(NAMBU_SIZE);
-        const ClusterCubeCD_t greenNambu0Cube = modelPtr_->greenNambu0();
+        const ClusterCubeCD_t greenNambu0Cube = modelPtr_->nambuCluster0Mat().data();
         ClusterCubeCD_t greenNambuCube(2 * ioModel_.Nc, 2 * ioModel_.Nc, NMat_);
         greenNambuCube.zeros();
         // std::cout << "Here " << std::endl;
@@ -124,6 +124,7 @@ class GreenBinning
         }
 
         greenNambuCube_ = greenNambuCube; //in case it is needed later on
+        assert(greenNambuCube.save("nambu.dat"));
 
         mpiUt::Print("End of GreenBinning.FinalizeGreenBinning()");
         return greenNambuCube; //the  measured interacting green function

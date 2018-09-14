@@ -3,13 +3,11 @@
 #include "Integrator.hpp"
 #include "Utilities.hpp"
 #include "MPIUtilities.hpp"
-#include "GreenMat.hpp"
+#include "NambuMat.hpp"
 #include "ABC_SelfConsistency.hpp"
 
 namespace SelfCon
 {
-
-using Utilities::GetSpinName;
 
 template <typename TH0>
 struct GreenLattice
@@ -44,24 +42,25 @@ class SelfConsistency : public ABC_SelfConsistency
   public:
     static const size_t Nc;
     static const ClusterMatrixCD_t II;
+    static const ClusterMatrixCD_t IINambu;
+
     static const double factNSelfCon;
     const size_t hybSavePrecision = 10;
 
-    SelfConsistency(const Json &jj, const TModel &model, const ClusterCubeCD_t &greenImpurity, const FermionSpin_t &spin) : model_(model),
-                                                                                                                            ioModel_(TIOModel()),
-                                                                                                                            greenImpurity_(greenImpurity),
-                                                                                                                            hybridization_(spin == FermionSpin_t::Up ? model_.hybridizationMatUp() : model_.hybridizationMatDown()),
-                                                                                                                            selfEnergy_(),
-                                                                                                                            hybNext_(),
-                                                                                                                            spin_(spin),
-                                                                                                                            weights_(cd_t(jj["WEIGHTSR"].get<double>(), jj["WEIGHTSI"].get<double>()))
+    SelfConsistency(const Json &jj, const TModel &model, const ClusterCubeCD_t &nambuImpurity) : model_(model),
+                                                                                                 ioModel_(TIOModel()),
+                                                                                                 nambuImpurity_(nambuImpurity),
+                                                                                                 hybridization_(model_.hybridizationMat()),
+                                                                                                 selfEnergy_(),
+                                                                                                 hybNext_(),
+                                                                                                 weights_(cd_t(jj["WEIGHTSR"].get<double>(), jj["WEIGHTSI"].get<double>()))
     {
 
         mpiUt::Print("Start of SC constructor");
 
         const size_t NGreen = greenImpurity_.n_slices;
-        size_t NSelfConTmp = std::max<double>(0.5 * (jj["ESelfCon"].get<double>() * model_.beta() / M_PI - 1.0),
-                                              0.5 * (200.0 * model_.beta() / M_PI - 1.0));
+        size_t NSelfConTmp = NGreen; //std::max<double>(0.5 * (jj["ESelfCon"].get<double>() * model_.beta() / M_PI - 1.0),
+                                     //               0.5 * (200.0 * model_.beta() / M_PI - 1.0));
         if (NGreen >= NSelfConTmp)
         {
             NSelfConTmp = factNSelfCon * static_cast<double>(NGreen);
@@ -73,42 +72,44 @@ class SelfConsistency : public ABC_SelfConsistency
         const size_t NHyb = hybridization_.n_slices();
         assert(NHyb >= NSelfCon);
 
-        selfEnergy_.resize(Nc, Nc, NSelfCon);
+        const size_t NNambu = 2 * Nc;
+        selfEnergy_.resize(NNambu, NNambu, NSelfCon);
 
         //0.) Extraire la self jusqu'a NGreen
+        const ClusterMatrixCD_t tLocNambu = arma::kron(ClusterMatrixCD_t(2, 2).eye(), model_.tLoc());
         for (size_t nn = 0; nn < NGreen; nn++)
         {
             const cd_t zz = cd_t(model_.mu(), (2.0 * nn + 1.0) * M_PI / model_.beta());
-            selfEnergy_.slice(nn) = -greenImpurity_.slice(nn).i() + zz * ClusterMatrixCD_t(Nc, Nc).eye() - model_.tLoc() - hybridization_.slice(nn);
+            selfEnergy_.slice(nn) = -nambuImpurity_.slice(nn).i() + zz * IINambu - tLocNambu - hybridization_.slice(nn);
         }
 
         //1.) Patcher la self par HF de NGreen à NSelfCon
-        ClusterMatrix_t nUpMatrix;
-        assert(nUpMatrix.load("nUpMatrix.dat"));
-        ClusterMatrix_t nDownMatrix;
-        assert(nDownMatrix.load("nDownMatrix.dat"));
-        ClusterMatrixCD_t nMatrix(nUpMatrix + nDownMatrix, ClusterMatrix_t(Nc, Nc).zeros());
+        // ClusterMatrix_t nUpMatrix;
+        // assert(nUpMatrix.load("nUpMatrix.dat"));
+        // ClusterMatrix_t nDownMatrix;
+        // assert(nDownMatrix.load("nDownMatrix.dat"));
+        // ClusterMatrixCD_t nMatrix(nUpMatrix + nDownMatrix, ClusterMatrix_t(Nc, Nc).zeros());
 
-        for (size_t nn = NGreen; nn < NSelfCon; nn++)
-        {
-            const cd_t iwn = cd_t(0.0, (2.0 * nn + 1.0) * M_PI / model_.beta());
-#ifndef AFM
-            selfEnergy_.slice(nn) = 0.5 * model_.U() * nMatrix + 1.0 / iwn * model_.U() * model_.U() * nMatrix / 2.0 * (II - nMatrix / 2.0);
-#else
-            if (spin_ == FermionSpin_t::Up)
-            {
-                selfEnergy_.slice(nn) = model_.U() * nDownMatrix + 1.0 / iwn * model_.U() * model_.U() * nDownMatrix * (II - nDownMatrix);
-            }
-            else if (spin_ == FermionSpin_t::Down)
-            {
-                selfEnergy_.slice(nn) = model_.U() * nUpMatrix + 1.0 / iwn * model_.U() * model_.U() * nUpMatrix * (II - nUpMatrix);
-            }
-            else
-            {
-                throw std::runtime_error("Ayaya, must be a spin man");
-            }
-#endif
-        }
+        //         for (size_t nn = NGreen; nn < NSelfCon; nn++)
+        //         {
+        //             const cd_t iwn = cd_t(0.0, (2.0 * nn + 1.0) * M_PI / model_.beta());
+        // #ifndef AFM
+        //             selfEnergy_.slice(nn) = 0.5 * model_.U() * nMatrix + 1.0 / iwn * model_.U() * model_.U() * nMatrix / 2.0 * (II - nMatrix / 2.0);
+        // #else
+        //             if (spin_ == FermionSpin_t::Up)
+        //             {
+        //                 selfEnergy_.slice(nn) = model_.U() * nDownMatrix + 1.0 / iwn * model_.U() * model_.U() * nDownMatrix * (II - nDownMatrix);
+        //             }
+        //             else if (spin_ == FermionSpin_t::Down)
+        //             {
+        //                 selfEnergy_.slice(nn) = model_.U() * nUpMatrix + 1.0 / iwn * model_.U() * model_.U() * nUpMatrix * (II - nUpMatrix);
+        //             }
+        //             else
+        //             {
+        //                 throw std::runtime_error("Ayaya, must be a spin man");
+        //             }
+        // #endif
+        //         }
 
         if (mpiUt::Rank() == mpiUt::master)
         {
@@ -258,15 +259,17 @@ class SelfConsistency : public ABC_SelfConsistency
     TModel model_;
     TIOModel ioModel_;
 
-    const ClusterCubeCD_t greenImpurity_;
-    GreenMat::HybridizationMat hybridization_;
+    const ClusterCubeCD_t nambuImpurity_;
+    NambuMat::HybridizationMat hybridization_;
     ClusterCubeCD_t selfEnergy_;
     ClusterCubeCD_t hybNext_;
-    const FermionSpin_t spin_;
     const cd_t weights_;
 };
 template <typename TIOModel, typename TModel, typename TH0>
 const ClusterMatrixCD_t SelfConsistency<TIOModel, TModel, TH0>::II = ClusterMatrixCD_t(TH0::Nc, TH0::Nc).eye();
+
+template <typename TIOModel, typename TModel, typename TH0>
+const ClusterMatrixCD_t SelfConsistency<TIOModel, TModel, TH0>::IINambu = ClusterMatrixCD_t(2 * TH0::Nc, 2 * TH0::Nc).eye();
 
 template <typename TIOModel, typename TModel, typename TH0>
 const size_t SelfConsistency<TIOModel, TModel, TH0>::Nc = TH0::Nc;

@@ -70,7 +70,7 @@ class NambuCluster0Tau
         nambuMatCluster_.Clear();
     }
 
-    double operator()(const Site_t &s1, const Site_t &s2, const Tau_t &tauIn, const std::pair<size_t, size_t> nambuIndices = {0, 0})
+    double operator()(const Site_t &s1, const Site_t &s2, const Tau_t &tauIn, const std::pair<FermionSpin_t, FermionSpin_t> nambuIndices = {FermionSpin_t::Up, FermionSpin_t::Up})
     {
         double tau = tauIn - EPS;
 
@@ -84,8 +84,8 @@ class NambuCluster0Tau
 
         const double nt = std::abs(tau) / beta_ * static_cast<double>(NTau_);
         const size_t n0 = static_cast<size_t>(nt);
-        const size_t r1 = s1 + nambuIndices.first * ioModel_.Nc;
-        const size_t r2 = s2 + nambuIndices.second * ioModel_.Nc;
+        const size_t r1 = s1 + static_cast<size_t>(nambuIndices.first) * ioModel_.Nc;
+        const size_t r2 = s2 + static_cast<size_t>(nambuIndices.second) * ioModel_.Nc;
         // std::cout << "data_.n_rows = " << data_.n_rows << std::endl;
         const double greentau0 = aps * ((1.0 - (nt - n0)) * data_(r1, r2, n0) + (nt - n0) * data_(r1, r2, n0 + 1));
         return greentau0;

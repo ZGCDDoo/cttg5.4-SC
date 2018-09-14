@@ -1,6 +1,6 @@
 
 #include "Includes/IS/MonteCarloBuilder.hpp"
-#include "Includes/Utilities/SelfConsistencyBuilder.hpp"
+// #include "Includes/Utilities/SelfConsistencyBuilder.hpp"
 #include "Includes/Utilities/FS.hpp"
 #include "Includes/PrintVersion.hpp"
 
@@ -36,10 +36,10 @@ int main(int argc, char **argv)
 
     monteCarloMachinePtr->RunMonteCarlo();
 
-    const std::unique_ptr<SelfCon::ABC_SelfConsistency> selfconUpPtr = SelfCon::SelfConsistencyBuilder(jj, FermionSpin_t::Up);
-    selfconUpPtr->DoSCGrid();
+    // const std::unique_ptr<SelfCon::ABC_SelfConsistency> selfconUpPtr = SelfCon::SelfConsistencyBuilder(jj, FermionSpin_t::Up);
+    // selfconUpPtr->DoSCGrid();
 
-    IO::FS::PrepareNextIter(paramsName, ITER);
+    // IO::FS::PrepareNextIter(paramsName, ITER);
 
 #endif
 

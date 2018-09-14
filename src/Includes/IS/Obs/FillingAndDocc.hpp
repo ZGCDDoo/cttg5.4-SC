@@ -119,16 +119,16 @@ class FillingAndDocc
                     const Site_t ss = dataCT_->vertices_.at(kk).site();
                     const Tau_t tt = dataCT_->vertices_[kk].tau();
 
-                    vec1Up(2 * kk) = dataCT_->green0CachedUp_(siteRng, ss, tauRng - tt);
+                    vec1Up(2 * kk) = dataCT_->nambu0Cached_(siteRng, ss, tauRng - tt);
                     vec1Up(2 * kk + 1) = 0.0; //dataCT_->F0UpDown0CachedUp_(siteRng, ss, tauRng - tt);
 
-                    vec2Up(2 * kk) = dataCT_->green0CachedUp_(ss, siteRng, tt - tauRng);
+                    vec2Up(2 * kk) = dataCT_->nambu0Cached_(ss, siteRng, tt - tauRng);
                     vec2Up(2 * kk + 1) = 0.0; //dataCT_->F0UpDownCachedUp_(ss, siteRng, tt - tauRng);
 
-                    vec1Down(2 * kk) = dataCT_->green0CachedDown_(siteRng, ss, tauRng - tt);
+                    vec1Down(2 * kk) = dataCT_->nambu0Cached_(siteRng, ss, tauRng - tt, {FermionSpin_t::Down, FermionSpin_t::Down});
                     vec1Down(2 * kk + 1) = 0.0; //dataCT_->F0DownUp0CachedUp_(siteRng, ss, tauRng - tt);
 
-                    vec2Down(2 * kk) = dataCT_->green0CachedDown_(ss, siteRng, tt - tauRng);
+                    vec2Down(2 * kk) = dataCT_->nambu0Cached_(ss, siteRng, tt - tauRng, {FermionSpin_t::Down, FermionSpin_t::Down});
                     vec2Down(2 * kk + 1) = 0.0; //dataCT_->F0DownUpCachedUp_(ss, siteRng, tt - tauRng);
                 }
 
@@ -142,8 +142,8 @@ class FillingAndDocc
                     dotdown = LinAlg::Dot(vec1Down, *(dataCT_->MPtr_), vec2Down);
                 }
 
-                const double green00Up = dataCT_->green0CachedUp_(s1, s1, -eps);
-                const double green00Down = dataCT_->green0CachedDown_(s1, s1, -eps);
+                const double green00Up = dataCT_->nambu0Cached_(s1, s1, -eps);
+                const double green00Down = dataCT_->nambu0Cached_(s1, s1, -eps, {FermionSpin_t::Down, FermionSpin_t::Down});
 
                 const double nUptmp = green00Up - dotup;
                 const double nDowntmp = green00Down - dotdown;

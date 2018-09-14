@@ -98,9 +98,9 @@ class Observables
                 mpiUt::IOResult<TIOModel>::SaveISResults(isResultVec, dataCT_->beta_);
 #endif
 
-                //                 // Start: This should be in PostProcess.cpp ?
-                //                 //Start of observables that are easier and ok to do once all has been saved (for exemples, depends only on final green function)
-                //                 //Get KinecticEnergy
+                // Start: This should be in PostProcess.cpp ?
+                //Start of observables that are easier and ok to do once all has been saved (for exemples, depends only on final green function)
+                //Get KinecticEnergy
                 // #ifndef DCA
                 //                 if (mpiUt::Rank() == mpiUt::master)
                 //                 {

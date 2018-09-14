@@ -39,8 +39,8 @@ enum class AuxSpin_t
 
 enum class FermionSpin_t
 {
-	Up,
-	Down
+	Up,  // 0
+	Down // one
 };
 
 using SiteVectorCD_t = arma::cx_vec;
