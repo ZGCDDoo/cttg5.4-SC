@@ -65,8 +65,8 @@ class SelfConsistency : public ABC_SelfConsistency
         {
             NSelfConTmp = factNSelfCon * static_cast<double>(NGreen);
         }
-        const size_t NSelfCon = NSelfConTmp;
-        assert(NSelfCon > NGreen);
+        const size_t NSelfCon = NGreen; //NSelfConTmp;
+        // assert(NSelfCon > NGreen);
         //Patcher la hyb si necessaire
         hybridization_.PatchHF(NSelfCon, model_.beta());
         const size_t NHyb = hybridization_.n_slices();
@@ -234,7 +234,7 @@ class SelfConsistency : public ABC_SelfConsistency
             hybNext_.zeros();
             ClusterCubeCD_t tKTildeGrid;
             assert(tKTildeGrid.load("tktilde.arma"));
-            size_t ktildepts = tKTildeGrid.n_slices;
+            const size_t ktildepts = tKTildeGrid.n_slices;
 
             const ClusterMatrixCD_t II2 = ClusterMatrixCD_t(2, 2).eye();
             const ClusterMatrixCD_t tLocNambu = arma::kron(ClusterMatrixCD_t(2, 2).eye(), model_.tLoc());
@@ -249,7 +249,7 @@ class SelfConsistency : public ABC_SelfConsistency
                     const ClusterMatrixCD_t tkTildeGridNambu = arma::kron(II2, tKTildeGrid.slice(ktildeindex));
                     gImpUpNext.slice(nn) += ((zz * IINambu - tkTildeGridNambu - selfEnergy_.slice(nn)).i());
                 }
-                gImpUpNext /= static_cast<double>(ktildepts);
+                gImpUpNext.slice(nn) /= static_cast<double>(ktildepts);
                 hybNext_.slice(nn) = -gImpUpNext.slice(nn).i() - selfEnergy_.slice(nn) + zz * IINambu - tLocNambu;
             }
             std::cout << "Here 2 " << std::endl;
