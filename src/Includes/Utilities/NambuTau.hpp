@@ -105,6 +105,10 @@ class NambuCluster0Tau
     void Save(const std::string &fileName)
     {
 
+        //to shut-up warning
+        std::string temp = fileName;
+        temp += "k";
+
         std::cout << "Nope, not implemented yet save gtau !" << std::endl;
     }
 

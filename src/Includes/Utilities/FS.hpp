@@ -57,7 +57,7 @@ void PrepareNextIter(const std::string paramsName, const size_t &iter)
     using boost::filesystem::copy_file;
     const std::string ext = ".dat";
 
-    copy_file("hybNext.dat", std::string("hybUp") + std::to_string(iter + 1) + ext);
+    // copy_file("hybNext.dat", std::string("hybUp") + std::to_string(iter + 1) + ext);
     // copy_file("hybNextNambu.arma", std::string("hybNambu") + std::to_string(iter + 1) + ".arma");
 
     copy_file("self.dat", std::string("self") + std::to_string(iter) + ext);

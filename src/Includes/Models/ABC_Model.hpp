@@ -56,11 +56,11 @@ class ABC_Model_2D
                 assert(tLoc_.load("tloc.arma"));
                 assert(hybFM_.load("hybFM.arma"));
 #endif
-                FinishConstructor(jj);
+                FinishConstructor();
                 mpiUt::Print(" End of ABC_Model Constructor ");
         };
 
-        void FinishConstructor(const Json &jj)
+        void FinishConstructor()
         {
 
                 ClusterCubeCD_t hybNambuData;

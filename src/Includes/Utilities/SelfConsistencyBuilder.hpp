@@ -8,6 +8,7 @@ namespace SelfCon
 std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj)
 {
     const std::string modelType = jj["modelType"].get<std::string>();
+    const std::string nambuFileName = "greenNambu.arma";
 
     if (modelType == "SIAM_Square")
     {
@@ -21,7 +22,7 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj)
 
         ClusterCubeCD_t greenImpurity;
 
-        assert(greenImpurity.load("nambu.dat"));
+        assert(greenImpurity.load(nambuFileName));
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
         return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
@@ -38,7 +39,7 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj)
 
         ClusterCubeCD_t greenImpurity;
 
-        assert(greenImpurity.load("nambu.dat"));
+        assert(greenImpurity.load(nambuFileName));
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
         return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
@@ -55,7 +56,7 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj)
 
         ClusterCubeCD_t greenImpurity;
 
-        assert(greenImpurity.load("nambu.dat"));
+        assert(greenImpurity.load(nambuFileName));
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
         return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
@@ -72,7 +73,7 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj)
 
         ClusterCubeCD_t greenImpurity;
 
-        assert(greenImpurity.load("nambu.dat"));
+        assert(greenImpurity.load(nambuFileName));
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
         return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
@@ -89,7 +90,7 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj)
 
         ClusterCubeCD_t greenImpurity;
 
-        assert(greenImpurity.load("nambu.dat"));
+        assert(greenImpurity.load(nambuFileName));
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
         return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));
@@ -106,7 +107,7 @@ std::unique_ptr<ABC_SelfConsistency> SelfConsistencyBuilder(const Json &jj)
 
         ClusterCubeCD_t greenImpurity;
 
-        assert(greenImpurity.load("nambu.dat"));
+        assert(greenImpurity.load(nambuFileName));
 
         using SelfCon_t = SelfCon::SelfConsistency<IOModel_t, Model_t, H0_t>;
         return std::make_unique<SelfCon_t>(SelfCon_t(jj, model, greenImpurity));

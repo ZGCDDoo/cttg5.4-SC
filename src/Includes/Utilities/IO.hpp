@@ -218,7 +218,7 @@ class Base_IOModel
         return cubetmp;
     }
 
-    void SaveCube(const std::string &fname, const ClusterCubeCD_t &greenIn, const double &beta, const size_t &precision = 10, const bool &saveArma = false) const
+    void SaveCube(const std::string &fname, const ClusterCubeCD_t &greenIn, const double &beta, const size_t &precision = 10) const
     {
 
         //Save In Nambu form first;
@@ -241,8 +241,6 @@ class Base_IOModel
 #endif
 
         green.save(fname + "Nambu.arma");
-        const size_t NMat = green.n_slices;
-        ClusterMatrixCD_t greenOut(NMat, this->indepSites_.size());
 
         std::ofstream fout;
         if (!boost::filesystem::exists("outPutConvention.dat"))
@@ -259,7 +257,13 @@ class Base_IOModel
             fout.close();
         }
 
-        fout.open(fname + std::string(".dat"), std::ios::out);
+        fout.open(fname + std::string("Up.dat"), std::ios::out);
+
+#ifdef AFM
+        std::ofstream foutDown;
+        foutDown.open(fname + std::string("Down.dat"), std::ios::out);
+#endif
+
         for (size_t nn = 0; nn < green.n_slices; nn++)
         {
             const double iwn = (2.0 * nn + 1.0) * M_PI / beta;
@@ -270,21 +274,28 @@ class Base_IOModel
                 const Site_t s1 = this->indepSites_.at(ii).first;
                 const Site_t s2 = this->indepSites_.at(ii).second;
 
-                greenOut(nn, ii) = green(s1, s2, nn);
                 fout << std::setprecision(precision) << green(s1, s2, nn).real()
                      << " "
                      << std::setprecision(precision) << green(s1, s2, nn).imag()
                      << " ";
+
+#ifdef AFM
+                foutDown << std::setprecision(precision) << green(s1 + Nc, s2 + Nc, nn).real()
+                         << " "
+                         << std::setprecision(precision) << green(s1 + Nc, s2 + Nc, nn).imag()
+                         << " ";
+#endif
             }
             fout << "\n";
+#ifdef AFM
+            foutDown << "\n";
+#endif
         }
 
         fout.close();
-
-        if (saveArma)
-        {
-            greenOut.save(fname + std::string(".arma"), arma::arma_ascii);
-        }
+#ifdef AFM
+        foutDown.close();
+#endif
     }
 
 #ifdef DCA
@@ -407,6 +418,16 @@ class Base_IOModel
         const size_t intRng = rngDouble * equivalentSize;
         return equivalentSites_.at(indepSiteIndex).at(intRng);
     }
+
+    // void WriteAnormal(const std::string &FAnaormalFileName, const ClusterCubeCD_t &greenNambu)
+    // {
+    //     }
+
+    // ClusterCubeCD_t ReadAnormal(const std::string &FAnaormalFileName)
+    // {
+    //     ClusterCubeCD_t result;
+    //     return result;
+    // }
 
     //Getters
     std::vector<std::pair<size_t, size_t>> const indepSites() { return indepSites_; };

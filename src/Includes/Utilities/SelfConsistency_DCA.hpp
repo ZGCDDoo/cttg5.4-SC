@@ -117,7 +117,7 @@ class SelfConsistency : public ABC_SelfConsistency
 
         if (mpiUt::Rank() == mpiUt::master)
         {
-            ioModel_.SaveK("self" + GetSpinName(spin_), selfEnergy_, model_.beta(), hybSavePrecision);
+            ioModel_.SaveK("self", selfEnergy_, model_.beta(), hybSavePrecision);
             std::cout << "In Selfonsistency constructor, after save selfenery " << std::endl;
         }
 

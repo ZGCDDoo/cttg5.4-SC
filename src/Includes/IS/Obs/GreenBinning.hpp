@@ -124,7 +124,6 @@ class GreenBinning
         }
 
         greenNambuCube_ = greenNambuCube; //in case it is needed later on
-        assert(greenNambuCube.save("nambu.dat"));
 
         mpiUt::Print("End of GreenBinning.FinalizeGreenBinning()");
         return greenNambuCube; //the  measured interacting green function

@@ -85,8 +85,7 @@ class IOResult
         const size_t n_slices = isResultVec.at(0).n_slices_;
 
         const ClusterCubeCD_t nambuResultCube = Utilities::VecCDToCubeCD<std::valarray<cd_t>>(nambuResult, n_rows, n_cols, n_slices);
-        ioModel.SaveCube("greenUp.dat", nambuResultCube, beta);
-        nambuResultCube.save("nambu.dat");
+        ioModel.SaveCube("green", nambuResultCube, beta);
 
         //Average the obsScale_
         SaveFillingMatrixs(fillingResultUp, fillingResultDown);
