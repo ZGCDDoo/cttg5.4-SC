@@ -64,7 +64,7 @@ class ABC_Model_2D
         {
 
                 ClusterCubeCD_t hybNambuData;
-                if (!hybNambuData.load("hybNambu.arma"))
+                if (!hybNambuData.load("hybNextNambu.arma"))
                 {
                         hybNambuData = ClusterCubeCD_t(2 * Nc, 2 * Nc, 1).zeros();
                 }

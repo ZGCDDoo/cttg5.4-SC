@@ -293,17 +293,17 @@ class ABC_MarkovChain
 
     double GetFTau0DownUp(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-        return 0.0;
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {FermionSpin_t::Down, FermionSpin_t::Up}));
     }
 
     double GetFTau0UpDown(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-        return 0.0;
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {FermionSpin_t::Up, FermionSpin_t::Down}));
     }
 
     void Measure()
     {
-        SiteVector_t FVM1 = -(nfdata_.F_ - 1.0);
+        const SiteVector_t FVM1 = -(nfdata_.F_ - 1.0);
         DDMGMM(FVM1, nfdata_.N_, *(dataCT_->MPtr_));
         obs_.Measure();
     }

@@ -18,6 +18,7 @@ class Base_IOModel
 
   public:
     const size_t Nc = TNX * TNY;
+    const size_t INVALID = 99999999;
 
     Base_IOModel(){};
 
@@ -204,7 +205,6 @@ class Base_IOModel
         const ClusterCubeCD_t greenDown = greenUp;
 #endif
 
-        const size_t Nc = greenUp.n_rows;
         const size_t NN = greenUp.n_slices;
 
         ClusterCubeCD_t cubetmp(2 * Nc, 2 * Nc, greenUp.n_slices);
@@ -218,10 +218,28 @@ class Base_IOModel
         return cubetmp;
     }
 
-    void SaveCube(const std::string &fname, const ClusterCubeCD_t &green, const double &beta, const size_t &precision = 10, const bool &saveArma = false) const
+    void SaveCube(const std::string &fname, const ClusterCubeCD_t &greenIn, const double &beta, const size_t &precision = 10, const bool &saveArma = false) const
     {
 
         //Save In Nambu form first;
+        //Average the Up and down sectors if not AFM
+        ClusterCubeCD_t green = greenIn;
+        const size_t NN = green.n_slices;
+
+#ifndef AFM
+        //Average the electronic parts
+        using arma::span;
+        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
+        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) /= 2.0;
+        green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1));
+
+        //Average the ANormal Parts
+        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
+        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) /= 2.0;
+        green.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
+
+#endif
+
         green.save(fname + "Nambu.arma");
         const size_t NMat = green.n_slices;
         ClusterMatrixCD_t greenOut(NMat, this->indepSites_.size());
@@ -408,6 +426,10 @@ class Base_IOModel
     std::vector<size_t> fillingSites_;
     std::vector<size_t> fillingSitesIndex_; //the indexes of the fillingsites in the indepSites_
     std::vector<size_t> downEquivalentSites_;
+
+    //For anormal part
+    std::vector<std::pair<size_t, size_t>> indepSitesFAnormal_;
+    std::vector<std::vector<std::pair<size_t, size_t>>> FAnormalSites_;
 };
 
 class IOTriangle2x2 : public Base_IOModel<Nx2, Nx2>
@@ -441,6 +463,11 @@ class IOSquare2x2 : public Base_IOModel<Nx2, Nx2>
             {{0, 1}, {0, 0}, {0, 3}, {0, 1}},
             {{0, 1}, {0, 3}, {0, 0}, {0, 1}},
             {{0, 3}, {0, 1}, {0, 1}, {0, 0}}};
+
+        // this->indepSitesFAnormal_ = {{0, 1}};
+        // this->FAnormalSites_ = {
+        //
+        // }
 
         FinishConstructor();
     }

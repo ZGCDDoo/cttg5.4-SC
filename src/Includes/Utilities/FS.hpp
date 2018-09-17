@@ -58,13 +58,13 @@ void PrepareNextIter(const std::string paramsName, const size_t &iter)
     const std::string ext = ".dat";
 
     copy_file("hybNext.dat", std::string("hybUp") + std::to_string(iter + 1) + ext);
-    copy_file("hybNextNambu.arma", std::string("hybNambu") + std::to_string(iter + 1) + ".arma");
+    // copy_file("hybNextNambu.arma", std::string("hybNambu") + std::to_string(iter + 1) + ".arma");
 
     copy_file("self.dat", std::string("self") + std::to_string(iter) + ext);
     copy_file("green.dat", std::string("greenUp") + std::to_string(iter) + ext);
     copy_file("Obs.json", std::string("Obs") + std::to_string(iter) + ".json");
     copy_file("upd.meas.json", std::string("upd.meas") + std::to_string(iter) + ".json");
-    copy_file("gtau.dat", std::string("g0tau") + std::to_string(iter) + ext);
+    // copy_file("gtau.dat", std::string("g0tau") + std::to_string(iter) + ext);
 
 #ifdef AFM
     copy_file("hybNextDown.dat", std::string("hybDown") + std::to_string(iter + 1) + ext);
