@@ -68,7 +68,7 @@ if(${MPI_BUILD})
     set(TEST OFF)
 endif()
 if(${MPI_BUILD} AND ${HOME})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     set(TEST OFF)
 endif()
 

@@ -127,98 +127,98 @@ class SelfConsistency : public ABC_SelfConsistency
 
     void DoSCGrid() override
     {
-#ifdef HAVEMPI
-        DoSCGridParallel();
-#else
+        // #ifdef HAVEMPI
+        // DoSCGridParallel();
+        // #else
         DoSCGridSerial();
-#endif
+        // #endif
     }
 
-#ifdef HAVEMPI
-    void DoSCGridParallel()
-    {
+    // #ifdef HAVEMPI
+    //     void DoSCGridParallel()
+    //     {
 
-        mpi::communicator world;
+    //         mpi::communicator world;
 
-        mpiUt::Print("In Selfonsistency DOSC Parallel");
-        const size_t NSelfCon = selfEnergy_.n_slices;
+    //         mpiUt::Print("In Selfonsistency DOSC Parallel");
+    //         const size_t NSelfCon = selfEnergy_.n_slices;
 
-        if (static_cast<size_t>(mpiUt::NWorkers()) > NSelfCon)
-        {
-            DoSCGridSerial();
-            return;
-        }
+    //         if (static_cast<size_t>(mpiUt::NWorkers()) > NSelfCon)
+    //         {
+    //             DoSCGridSerial();
+    //             return;
+    //         }
 
-        const size_t NSelfConRank = mpiUt::Rank() == mpiUt::master ? (NSelfCon / mpiUt::NWorkers() + NSelfCon % mpiUt::NWorkers()) : NSelfCon / mpiUt::NWorkers();
+    //         const size_t NSelfConRank = mpiUt::Rank() == mpiUt::master ? (NSelfCon / mpiUt::NWorkers() + NSelfCon % mpiUt::NWorkers()) : NSelfCon / mpiUt::NWorkers();
 
-        ClusterCubeCD_t gImpUpNextRank(Nc, Nc, NSelfConRank);
-        gImpUpNextRank.zeros();
-        ClusterCubeCD_t hybNextRank(Nc, Nc, NSelfConRank);
-        hybNextRank.zeros();
+    //         ClusterCubeCD_t gImpUpNextRank(Nc, Nc, NSelfConRank);
+    //         gImpUpNextRank.zeros();
+    //         ClusterCubeCD_t hybNextRank(Nc, Nc, NSelfConRank);
+    //         hybNextRank.zeros();
 
-        ClusterCubeCD_t tKTildeGrid;
-        assert(tKTildeGrid.load("tktilde.arma"));
-        const size_t ktildepts = tKTildeGrid.n_slices;
+    //         ClusterCubeCD_t tKTildeGrid;
+    //         assert(tKTildeGrid.load("tktilde.arma"));
+    //         const size_t ktildepts = tKTildeGrid.n_slices;
 
-        const size_t nnStart = mpiUt::Rank() == mpiUt::master ? 0 : NSelfCon % mpiUt::NWorkers() + (NSelfCon / mpiUt::NWorkers()) * mpiUt::Rank();
-        const size_t nnEnd = nnStart + NSelfConRank;
-        for (size_t nn = nnStart; nn < nnEnd; nn++)
-        {
-            const cd_t zz = cd_t(model_.mu(), (2.0 * nn + 1.0) * M_PI / model_.beta());
-            for (size_t ktildeindex = 0; ktildeindex < ktildepts; ktildeindex++)
-            {
-                gImpUpNextRank.slice(nn - nnStart) += 1.0 / (static_cast<double>(ktildepts)) * ((zz * ClusterMatrixCD_t(Nc, Nc).eye() - tKTildeGrid.slice(ktildeindex) - selfEnergy_.slice(nn)).i());
-            }
-            hybNextRank.slice(nn - nnStart) = -gImpUpNextRank.slice(nn - nnStart).i() - selfEnergy_.slice(nn) + zz * ClusterMatrixCD_t(Nc, Nc).eye() - model_.tLoc();
-        }
+    //         const size_t nnStart = mpiUt::Rank() == mpiUt::master ? 0 : NSelfCon % mpiUt::NWorkers() + (NSelfCon / mpiUt::NWorkers()) * mpiUt::Rank();
+    //         const size_t nnEnd = nnStart + NSelfConRank;
+    //         for (size_t nn = nnStart; nn < nnEnd; nn++)
+    //         {
+    //             const cd_t zz = cd_t(model_.mu(), (2.0 * nn + 1.0) * M_PI / model_.beta());
+    //             for (size_t ktildeindex = 0; ktildeindex < ktildepts; ktildeindex++)
+    //             {
+    //                 gImpUpNextRank.slice(nn - nnStart) += 1.0 / (static_cast<double>(ktildepts)) * ((zz * ClusterMatrixCD_t(Nc, Nc).eye() - tKTildeGrid.slice(ktildeindex) - selfEnergy_.slice(nn)).i());
+    //             }
+    //             hybNextRank.slice(nn - nnStart) = -gImpUpNextRank.slice(nn - nnStart).i() - selfEnergy_.slice(nn) + zz * ClusterMatrixCD_t(Nc, Nc).eye() - model_.tLoc();
+    //         }
 
-        std::vector<std::vector<cd_t>> tmpMemGImpVec;
-        std::vector<std::vector<cd_t>> tmpMemHybNextVec;
-        std::vector<cd_t> tmpMemGImp = mpiUt::CubeCDToVecCD(gImpUpNextRank);
-        std::vector<cd_t> tmpMemHybNext = mpiUt::CubeCDToVecCD(hybNextRank);
+    //         std::vector<std::vector<cd_t>> tmpMemGImpVec;
+    //         std::vector<std::vector<cd_t>> tmpMemHybNextVec;
+    //         std::vector<cd_t> tmpMemGImp = mpiUt::CubeCDToVecCD(gImpUpNextRank);
+    //         std::vector<cd_t> tmpMemHybNext = mpiUt::CubeCDToVecCD(hybNextRank);
 
-        if (mpiUt::Rank() == mpiUt::master)
-        {
-            mpi::gather(world, tmpMemGImp, tmpMemGImpVec, mpiUt::master);
-            mpi::gather(world, tmpMemHybNext, tmpMemHybNextVec, mpiUt::master);
-        }
-        else
-        {
-            mpi::gather(world, tmpMemGImp, mpiUt::master);
-            mpi::gather(world, tmpMemHybNext, mpiUt::master);
-        }
+    //         if (mpiUt::Rank() == mpiUt::master)
+    //         {
+    //             mpi::gather(world, tmpMemGImp, tmpMemGImpVec, mpiUt::master);
+    //             mpi::gather(world, tmpMemHybNext, tmpMemHybNextVec, mpiUt::master);
+    //         }
+    //         else
+    //         {
+    //             mpi::gather(world, tmpMemGImp, mpiUt::master);
+    //             mpi::gather(world, tmpMemHybNext, mpiUt::master);
+    //         }
 
-        if (mpiUt::Rank() == mpiUt::master)
-        {
-            ClusterCubeCD_t gImpUpNext(Nc, Nc, NSelfCon);
-            gImpUpNext.zeros();
-            hybNext_.resize(Nc, Nc, NSelfCon);
-            hybNext_.zeros();
+    //         if (mpiUt::Rank() == mpiUt::master)
+    //         {
+    //             ClusterCubeCD_t gImpUpNext(Nc, Nc, NSelfCon);
+    //             gImpUpNext.zeros();
+    //             hybNext_.resize(Nc, Nc, NSelfCon);
+    //             hybNext_.zeros();
 
-            for (size_t ii = 0; ii < static_cast<size_t>(mpiUt::NWorkers()); ii++)
-            {
-                ClusterCubeCD_t tmpGImpNextRank = mpiUt::VecCDToCubeCD(tmpMemGImpVec.at(ii), Nc, Nc, tmpMemGImpVec.at(ii).size() / (Nc * Nc));
-                ClusterCubeCD_t tmpHybNextRank = mpiUt::VecCDToCubeCD(tmpMemHybNextVec.at(ii), Nc, Nc, tmpMemHybNextVec.at(ii).size() / (Nc * Nc));
+    //             for (size_t ii = 0; ii < static_cast<size_t>(mpiUt::NWorkers()); ii++)
+    //             {
+    //                 ClusterCubeCD_t tmpGImpNextRank = mpiUt::VecCDToCubeCD(tmpMemGImpVec.at(ii), Nc, Nc, tmpMemGImpVec.at(ii).size() / (Nc * Nc));
+    //                 ClusterCubeCD_t tmpHybNextRank = mpiUt::VecCDToCubeCD(tmpMemHybNextVec.at(ii), Nc, Nc, tmpMemHybNextVec.at(ii).size() / (Nc * Nc));
 
-                const size_t jjStart = ii == 0 ? 0 : NSelfCon % mpiUt::NWorkers() + (NSelfCon / mpiUt::NWorkers()) * ii;
-                const size_t jjEnd = jjStart + tmpGImpNextRank.n_slices;
-                for (size_t jj = jjStart; jj < jjEnd; jj++)
-                {
-                    gImpUpNext.slice(jj) = tmpGImpNextRank.slice(jj - jjStart);
-                    hybNext_.slice(jj) = tmpHybNextRank.slice(jj - jjStart);
-                }
-            }
+    //                 const size_t jjStart = ii == 0 ? 0 : NSelfCon % mpiUt::NWorkers() + (NSelfCon / mpiUt::NWorkers()) * ii;
+    //                 const size_t jjEnd = jjStart + tmpGImpNextRank.n_slices;
+    //                 for (size_t jj = jjStart; jj < jjEnd; jj++)
+    //                 {
+    //                     gImpUpNext.slice(jj) = tmpGImpNextRank.slice(jj - jjStart);
+    //                     hybNext_.slice(jj) = tmpHybNextRank.slice(jj - jjStart);
+    //                 }
+    //             }
 
-            hybNext_ *= (1.0 - weights_);
-            hybNext_ += weights_ * hybridization_.data();
-            ioModel_.SaveCube("green", gImpUpNext, model_.beta(), hybSavePrecision);
-            ioModel_.SaveCube("hybNext" + GetSpinName(spin_), hybNext_, model_.beta(), hybSavePrecision);
+    //             hybNext_ *= (1.0 - weights_);
+    //             hybNext_ += weights_ * hybridization_.data();
+    //             ioModel_.SaveCube("green", gImpUpNext, model_.beta(), hybSavePrecision);
+    //             ioModel_.SaveCube("hybNext" + GetSpinName(spin_), hybNext_, model_.beta(), hybSavePrecision);
 
-            mpiUt::Print("After Selfonsistency DOSC Parallel");
-        }
-    }
+    //             mpiUt::Print("After Selfonsistency DOSC Parallel");
+    //         }
+    //     }
 
-#endif
+    // #endif
 
     void DoSCGridSerial()
     {

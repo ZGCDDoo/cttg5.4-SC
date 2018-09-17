@@ -39,6 +39,8 @@ class ISResult
                                                                                              fillingDown_(fillingDown.data(), fillingDown.size())
     {
         nambu_ = Utilities::CubeCDToVecCD<DataCD_t>(nambu);
+
+        std::cout << "End of ISResult constructor " << std::endl;
     }
 
   private:
@@ -62,10 +64,8 @@ class ISResult
         ar &n_cols_;
         ar &n_slices_;
         ar &nambu_;
+        ar &fillingUp_;
         ar &fillingDown_;
-#ifdef AFM
-        ar &greenTabDown_;
-#endif
     }
 
     std::map<std::string, double> obsScal_;
