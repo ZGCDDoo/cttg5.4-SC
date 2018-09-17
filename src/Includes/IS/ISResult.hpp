@@ -33,7 +33,7 @@ class ISResult
              const std::vector<double> &fillingUp, const std::vector<double> &fillingDown) : obsScal_(obsScal),
                                                                                              n_rows_(nambu.n_rows),
                                                                                              n_cols_(nambu.n_cols),
-                                                                                             n_slices_(nambu.n_cols),
+                                                                                             n_slices_(nambu.n_slices),
                                                                                              nambu_(),
                                                                                              fillingUp_(fillingUp.data(), fillingUp.size()),
                                                                                              fillingDown_(fillingDown.data(), fillingDown.size())

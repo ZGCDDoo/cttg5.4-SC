@@ -226,19 +226,19 @@ class Base_IOModel
         ClusterCubeCD_t green = greenIn;
         const size_t NN = green.n_slices;
 
-#ifndef AFM
-        //Average the electronic parts
-        using arma::span;
-        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
-        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) /= 2.0;
-        green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1));
+        // #ifndef AFM
+        //         //Average the electronic parts
+        //         using arma::span;
+        //         green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
+        //         green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) /= 2.0;
+        //         green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1));
 
-        //Average the ANormal Parts
-        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
-        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) /= 2.0;
-        green.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
+        //         //Average the ANormal Parts
+        //         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
+        //         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) /= 2.0;
+        //         green.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
 
-#endif
+        // #endif
 
         green.save(fname + "Nambu.arma");
 
@@ -419,6 +419,11 @@ class Base_IOModel
         return equivalentSites_.at(indepSiteIndex).at(intRng);
     }
 
+    double SignFAnormal(const size_t &s1, const size_t &s2) const
+    {
+        return signFAnormal_(s1, s2);
+    }
+
     // void WriteAnormal(const std::string &FAnaormalFileName, const ClusterCubeCD_t &greenNambu)
     // {
     //     }
@@ -449,8 +454,7 @@ class Base_IOModel
     std::vector<size_t> downEquivalentSites_;
 
     //For anormal part
-    std::vector<std::pair<size_t, size_t>> indepSitesFAnormal_;
-    std::vector<std::vector<std::pair<size_t, size_t>>> FAnormalSites_;
+    ClusterMatrix_t signFAnormal_;
 };
 
 class IOTriangle2x2 : public Base_IOModel<Nx2, Nx2>
@@ -466,6 +470,12 @@ class IOTriangle2x2 : public Base_IOModel<Nx2, Nx2>
             {{0, 1}, {1, 1}, {1, 2}, {0, 1}},
             {{0, 1}, {1, 2}, {1, 1}, {0, 1}},
             {{0, 3}, {0, 1}, {0, 1}, {0, 0}}};
+
+        this->signFAnormal_ = {
+            {0.0, 1.0, -1.0, 0.0},
+            {1.0, 0.0, 0.0, -1.0},
+            {-1.0, 0.0, 0.0, 1.0},
+            {0.0, -1.0, 1.0, 0.0}};
 
         FinishConstructor();
     }
@@ -485,10 +495,11 @@ class IOSquare2x2 : public Base_IOModel<Nx2, Nx2>
             {{0, 1}, {0, 3}, {0, 0}, {0, 1}},
             {{0, 3}, {0, 1}, {0, 1}, {0, 0}}};
 
-        // this->indepSitesFAnormal_ = {{0, 1}};
-        // this->FAnormalSites_ = {
-        //
-        // }
+        this->signFAnormal_ = {
+            {0.0, 1.0, -1.0, 0.0},
+            {1.0, 0.0, 0.0, -1.0},
+            {-1.0, 0.0, 0.0, 1.0},
+            {0.0, -1.0, 1.0, 0.0}};
 
         FinishConstructor();
     }

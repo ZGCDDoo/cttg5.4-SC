@@ -53,14 +53,14 @@ class SelfConsistency : public ABC_SelfConsistency
                                                                                                  hybridization_(model_.hybridizationMat()),
                                                                                                  selfEnergy_(),
                                                                                                  hybNext_(),
-                                                                                                 weights_(cd_t(jj["WEIGHTSR"].get<double>(), jj["WEIGHTSI"].get<double>()))
+                                                                                                 weights_(jj["WEIGHTSR"].get<double>(), jj["WEIGHTSI"].get<double>())
     {
 
         mpiUt::Print("Start of SC constructor");
 
         const size_t NGreen = nambuImpurity_.n_slices;
-        size_t NSelfConTmp = NGreen; //std::max<double>(0.5 * (jj["ESelfCon"].get<double>() * model_.beta() / M_PI - 1.0),
-                                     //               0.5 * (200.0 * model_.beta() / M_PI - 1.0));
+        size_t NSelfConTmp = std::max<double>(0.5 * (jj["ESelfCon"].get<double>() * model_.beta() / M_PI - 1.0),
+                                              0.5 * (200.0 * model_.beta() / M_PI - 1.0));
         if (NGreen >= NSelfConTmp)
         {
             NSelfConTmp = factNSelfCon * static_cast<double>(NGreen);

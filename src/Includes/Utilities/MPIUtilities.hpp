@@ -90,8 +90,6 @@ class IOResult
         //Average the obsScale_
         SaveFillingMatrixs(fillingResultUp, fillingResultDown);
         StatsJsons(isResultVec);
-
-        return;
     }
 
     static void StatsJsons(const std::vector<Result::ISResult> &isResultVec)
@@ -136,8 +134,6 @@ class IOResult
         std::ofstream fout("Obs.json");
         fout << std::setw(4) << jjResult << std::endl;
         fout.close();
-
-        return;
     }
 
     static void SaveFillingMatrixs(std::valarray<double> fillingResultUp, std::valarray<double> fillingResultDown)
@@ -227,7 +223,6 @@ void SaveConfig(const std::vector<Utilities::Vertex> &vertices)
 
     std::string filename = std::string("config") + std::to_string(mpiUt::Rank()) + std::string(".dat");
     config.save(filename);
-    return;
 }
 
 bool LoadConfig(std::vector<Utilities::Vertex> &vertices)

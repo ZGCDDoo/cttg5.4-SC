@@ -52,7 +52,8 @@ class GreenBinning
                     const size_t s1 = dataCT_->vertices_.at(p1).site();
                     const size_t s2 = dataCT_->vertices_[p2].site();
                     const size_t ll = ioModel_.FindIndepSiteIndex(s1, s2);
-                    SiteVector_t temp = static_cast<double>(dataCT_->sign_) * SiteVector_t({Mmat(2 * p1, 2 * p2), Mmat(2 * p1 + 1, 2 * p2), Mmat(2 * p1, 2 * p2 + 1), Mmat(2 * p1 + 1, 2 * p2 + 1)});
+                    const double factAnormal = ioModel_.SignFAnormal(s1, s2);
+                    SiteVector_t temp = static_cast<double>(dataCT_->sign_) * SiteVector_t({Mmat(2 * p1, 2 * p2), factAnormal * Mmat(2 * p1 + 1, 2 * p2), factAnormal * Mmat(2 * p1, 2 * p2 + 1), Mmat(2 * p1 + 1, 2 * p2 + 1)});
 
                     double tau = dataCT_->vertices_[p1].tau() - dataCT_->vertices_[p2].tau();
                     if (tau < 0.0)
@@ -124,6 +125,10 @@ class GreenBinning
         }
 
         greenNambuCube_ = greenNambuCube; //in case it is needed later on
+
+        std::cout << "greenNambuCube.n_rows = " << greenNambuCube.n_rows << std::endl;
+        std::cout << "greenNambuCube.n_cols = " << greenNambuCube.n_cols << std::endl;
+        std::cout << "greenNambuCube.n_slices = " << greenNambuCube.n_slices << std::endl;
 
         mpiUt::Print("End of GreenBinning.FinalizeGreenBinning()");
         return greenNambuCube; //the  measured interacting green function
