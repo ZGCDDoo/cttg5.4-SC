@@ -76,15 +76,23 @@ class SelfConsistency : public ABC_SelfConsistency
         selfEnergy_.resize(NNambu, NNambu, NSelfCon);
 
         //0.) Extraire la self jusqu'a NGreen
-        const ClusterMatrixCD_t tLocNambu = arma::kron(ClusterMatrixCD_t(2, 2).eye(), model_.tLoc());
+        const ClusterMatrixCD_t II2x2Nambu = {{cd_t(1.0), cd_t(0.0)}, {cd_t(0.0), cd_t(-1.0)}};
+
+        const ClusterMatrixCD_t II = ClusterMatrixCD_t(NNambu, NNambu).eye();
+        const ClusterMatrixCD_t IINambu = arma::kron(II2x2Nambu, ClusterMatrixCD_t(Nc, Nc).eye());
+
+        const ClusterMatrixCD_t tLocNambu = arma::kron(II2x2Nambu, model_.tLoc());
+        const ClusterMatrixCD_t muNambu = model_.mu() * IINambu;
+
         for (size_t nn = 0; nn < NGreen; nn++)
         {
-            const cd_t zz = cd_t(model_.mu(), (2.0 * nn + 1.0) * M_PI / model_.beta());
-            selfEnergy_.slice(nn) = -nambuImpurity_.slice(nn).i() + zz * IINambu - tLocNambu - hybridization_.slice(nn);
+            const cd_t iwn(0.0, (2.0 * nn + 1.0) * M_PI / model_.beta());
+            selfEnergy_.slice(nn) = -nambuImpurity_.slice(nn).i() + iwn * II + muNambu - tLocNambu - hybridization_.slice(nn);
         }
 
         //1.) Patcher la self par HF de NGreen à NSelfCon
         const ClusterMatrix_t II2x2 = ClusterMatrix_t(2, 2).eye();
+
         ClusterMatrix_t nUpMatrix;
         assert(nUpMatrix.load("nUpMatrix.dat"));
         nUpMatrix = arma::kron(II2x2, nUpMatrix);
@@ -93,13 +101,13 @@ class SelfConsistency : public ABC_SelfConsistency
         assert(nDownMatrix.load("nDownMatrix.dat"));
         nDownMatrix = arma::kron(II2x2, nDownMatrix);
 
-        ClusterMatrixCD_t nMatrix(nUpMatrix + nDownMatrix, ClusterMatrix_t(2 * Nc, 2 * Nc).zeros());
+        ClusterMatrixCD_t nMatrix(nUpMatrix + nDownMatrix, ClusterMatrix_t(NNambu, NNambu).zeros());
 
         for (size_t nn = NGreen; nn < NSelfCon; nn++)
         {
-            const cd_t iwn = cd_t(0.0, (2.0 * nn + 1.0) * M_PI / model_.beta());
+            const cd_t iwn(0.0, (2.0 * nn + 1.0) * M_PI / model_.beta());
 #ifndef AFM
-            selfEnergy_.slice(nn) = 0.5 * model_.U() * nMatrix + 1.0 / iwn * model_.U() * model_.U() * nMatrix / 2.0 * (IINambu - nMatrix / 2.0);
+            selfEnergy_.slice(nn) = 0.5 * model_.U() * IINambu * nMatrix + 1.0 / iwn * model_.U() * model_.U() * nMatrix / 2.0 * (II - nMatrix / 2.0);
 #else
             if (spin_ == FermionSpin_t::Up)
             {
@@ -237,20 +245,26 @@ class SelfConsistency : public ABC_SelfConsistency
             const size_t ktildepts = tKTildeGrid.n_slices;
 
             const ClusterMatrixCD_t II2 = ClusterMatrixCD_t(2, 2).eye();
-            const ClusterMatrixCD_t tLocNambu = arma::kron(ClusterMatrixCD_t(2, 2).eye(), model_.tLoc());
+            const ClusterMatrixCD_t II2x2Nambu = {{cd_t(1.0), cd_t(0.0)}, {cd_t(0.0), cd_t(-1.0)}};
+
+            const ClusterMatrixCD_t II = ClusterMatrixCD_t(NNambu, NNambu).eye();
+            const ClusterMatrixCD_t IINambu = arma::kron(II2x2Nambu, ClusterMatrixCD_t(Nc, Nc).eye());
+
+            const ClusterMatrixCD_t tLocNambu = arma::kron(II2x2Nambu, model_.tLoc());
+            const ClusterMatrixCD_t muNambu = model_.mu() * IINambu;
 
             std::cout << "Here 1" << std::endl;
 
             for (size_t nn = 0; nn < NSelfCon; nn++)
             {
-                const cd_t zz = cd_t(model_.mu(), (2.0 * static_cast<double>(nn) + 1.0) * M_PI / model_.beta());
+                const cd_t iwn(0.0, (2.0 * static_cast<double>(nn) + 1.0) * M_PI / model_.beta());
                 for (size_t ktildeindex = 0; ktildeindex < ktildepts; ktildeindex++)
                 {
-                    const ClusterMatrixCD_t tkTildeGridNambu = arma::kron(II2, tKTildeGrid.slice(ktildeindex));
-                    gImpUpNext.slice(nn) += ((zz * IINambu - tkTildeGridNambu - selfEnergy_.slice(nn)).i());
+                    const ClusterMatrixCD_t tkTildeGridNambu = arma::kron(II2x2Nambu, tKTildeGrid.slice(ktildeindex));
+                    gImpUpNext.slice(nn) += ((iwn * IINambu + muNambu - tkTildeGridNambu - selfEnergy_.slice(nn)).i());
                 }
                 gImpUpNext.slice(nn) /= static_cast<double>(ktildepts);
-                hybNext_.slice(nn) = -gImpUpNext.slice(nn).i() - selfEnergy_.slice(nn) + zz * IINambu - tLocNambu;
+                hybNext_.slice(nn) = -gImpUpNext.slice(nn).i() - selfEnergy_.slice(nn) + iwn * IINambu + muNambu - tLocNambu;
             }
             std::cout << "Here 2 " << std::endl;
 

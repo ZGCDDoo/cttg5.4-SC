@@ -63,9 +63,11 @@ class ABC_Model_2D
         {
 
                 ClusterCubeCD_t hybNambuData;
+                ClusterMatrixCD_t hybSM;
                 if (!hybNambuData.load("hybNextNambu.arma"))
                 {
                         hybNambuData = ClusterCubeCD_t(2 * Nc, 2 * Nc, 1).zeros();
+                        // hybSM =
                 }
 
                 const size_t NHyb = hybNambuData.n_slices;

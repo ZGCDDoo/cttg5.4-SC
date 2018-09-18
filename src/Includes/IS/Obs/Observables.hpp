@@ -6,7 +6,7 @@
 
 #include "GreenBinning.hpp"
 #include "FillingAndDocc.hpp"
-#include "KineticEnergy.hpp"
+// #include "KineticEnergy.hpp"
 #include "../ISData.hpp"
 #include "../ISResult.hpp"
 

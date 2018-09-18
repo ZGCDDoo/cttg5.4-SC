@@ -229,9 +229,9 @@ class Base_IOModel
 #ifndef AFM
         //Average the electronic parts
         using arma::span;
-        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
+        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) += -arma::conj(greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)));
         green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) /= 2.0;
-        green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1));
+        green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = -arma::conj(green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)));
 
         //Average the ANormal Parts
         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
@@ -240,6 +240,7 @@ class Base_IOModel
 
 #endif
 
+        //Save in good format, i.e in real nambu format
         green.save(fname + "Nambu.arma");
 
         std::ofstream fout;

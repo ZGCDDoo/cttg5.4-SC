@@ -113,26 +113,30 @@ class NambuCluster0Mat
                                                                                                                          beta_(beta)
     {
         assert(2 * tLoc_.n_rows == hyb.data().n_rows);
+        const size_t Nc = tLoc_.n_rows;
         const size_t NNambu = hyb_.data().n_rows;
         const size_t ll = hyb.data().n_slices;
 
         data_.resize(NNambu, NNambu, ll);
         data_.zeros();
 
-        //For now, not really nambu, but simply not split in spin
-        const ClusterMatrixCD_t II = ClusterMatrixCD_t(NNambu, NNambu).eye();
         const ClusterMatrixCD_t II2x2 = ClusterMatrixCD_t(2, 2).eye();
+        const ClusterMatrixCD_t II2x2Nambu = {{cd_t(1.0), cd_t(0.0)}, {cd_t(0.0), cd_t(-1.0)}};
+
+        const ClusterMatrixCD_t II = ClusterMatrixCD_t(NNambu, NNambu).eye();
+        const ClusterMatrixCD_t IINambu = arma::kron(II2x2Nambu, ClusterMatrixCD_t(Nc, Nc).eye());
 
         zm_ = ClusterMatrixCD_t(NNambu, NNambu).zeros();
         fm_ = II;
         std::cout << "Here" << std::endl;
 
-        const ClusterMatrixCD_t tlocNambu = arma::kron(II2x2, tLoc_);
+        const ClusterMatrixCD_t tlocNambu = arma::kron(II2x2Nambu, tLoc_);
+        const ClusterMatrixCD_t muNambu = mu_ * IINambu;
 
         std::cout << "tlocNambu.n_rows = " << tlocNambu.n_rows << std::endl;
         std::cout << "II.n_rows = " << II.n_rows << std::endl;
 
-        const ClusterMatrixCD_t tmpsm = tlocNambu - mu_ * II;
+        const ClusterMatrixCD_t tmpsm = tlocNambu - muNambu;
         std::cout << "Here 2" << std::endl;
 
         sm_ = tmpsm;
@@ -141,8 +145,8 @@ class NambuCluster0Mat
         ClusterMatrixCD_t tmp;
         for (size_t n = 0; n < ll; n++)
         {
-            const cd_t zz(mu_, (2.0 * n + 1.0) * M_PI / beta_);
-            tmp = zz * II - tlocNambu - hyb_.slice(n);
+            const cd_t iwn(0.0, (2.0 * n + 1.0) * M_PI / beta_);
+            tmp = iwn * II + muNambu - tlocNambu - hyb_.slice(n);
             data_.slice(n) = tmp.i();
         }
     }
