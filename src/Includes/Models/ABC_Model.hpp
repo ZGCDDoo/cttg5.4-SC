@@ -67,7 +67,8 @@ class ABC_Model_2D
                 if (!hybNambuData.load("hybNextNambu.arma"))
                 {
                         hybNambuData = ClusterCubeCD_t(2 * Nc, 2 * Nc, 1).zeros();
-                        // hybSM =
+                        // const ClusterMatrix_t II2x2Off = {{0.0, 1.0}, {1.0, 0.0}};
+                        // hybSM = arma::kron(II2x2Off, 1e-4 * ioModel_.signFAnormal());
                 }
 
                 const size_t NHyb = hybNambuData.n_slices;
@@ -75,7 +76,7 @@ class ABC_Model_2D
                 const size_t NHyb_HF = std::max<double>(factNHyb * static_cast<double>(NHyb),
                                                         0.5 * (300.0 * beta_ / M_PI - 1.0));
 
-                hybridizationMat_ = NambuMat::HybridizationMat(hybNambuData, this->hybFM_, ClusterMatrixCD_t());
+                hybridizationMat_ = NambuMat::HybridizationMat(hybNambuData, this->hybFM_, hybSM);
 
                 hybridizationMat_.PatchHF(NHyb_HF, beta_);
 

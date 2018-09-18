@@ -436,13 +436,15 @@ class Base_IOModel
     // }
 
     //Getters
-    std::vector<std::pair<size_t, size_t>> const indepSites() { return indepSites_; };
-    std::vector<std::vector<std::pair<size_t, size_t>>> const GreenSites() { return GreenSites_; };
-    std::vector<std::vector<std::pair<size_t, size_t>>> const equivalentSites() { return equivalentSites_; };
-    std::vector<size_t> const nOfAssociatedSites() { return nOfAssociatedSites_; };
-    std::vector<size_t> const fillingSites() { return fillingSites_; };
-    std::vector<size_t> const fillingSitesIndex() { return fillingSitesIndex_; };
-    std::vector<size_t> const downEquivalentSites() { return downEquivalentSites_; };
+    std::vector<std::pair<size_t, size_t>> const indepSites() const { return indepSites_; };
+    std::vector<std::vector<std::pair<size_t, size_t>>> const GreenSites() const { return GreenSites_; };
+    std::vector<std::vector<std::pair<size_t, size_t>>> const equivalentSites() const { return equivalentSites_; };
+    std::vector<size_t> const nOfAssociatedSites() const { return nOfAssociatedSites_; };
+    std::vector<size_t> const fillingSites() const { return fillingSites_; };
+    std::vector<size_t> const fillingSitesIndex() const { return fillingSitesIndex_; };
+    std::vector<size_t> const downEquivalentSites() const { return downEquivalentSites_; };
+
+    ClusterMatrix_t const signFAnormal() const { return signFAnormal_; };
 
   protected:
     std::vector<std::pair<size_t, size_t>> indepSites_;
