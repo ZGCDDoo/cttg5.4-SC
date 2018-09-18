@@ -2,7 +2,6 @@
 
 #include "../Utilities/Utilities.hpp"
 #include "../Utilities/MPIUtilities.hpp"
-#include "../Utilities/Integrator.hpp"
 #include "../Utilities/NambuMat.hpp"
 #include "../Utilities/IO.hpp"
 #include "HybFMAndTLoc.hpp"

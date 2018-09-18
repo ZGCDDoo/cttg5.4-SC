@@ -13,10 +13,9 @@ class HybridizationMat
 
     {
 
-        using arma::kron;
         const ClusterMatrixCD_t II2x2 = ClusterMatrixCD_t(2, 2).eye();
 
-        fm_ = kron(II2x2, fm);
+        fm_ = arma::kron(II2x2, fm);
 
         if (sm_.n_rows == 0)
         {
@@ -24,7 +23,7 @@ class HybridizationMat
         }
         else
         {
-            sm_ = kron(II2x2, sm);
+            sm_ = arma::kron(II2x2, sm);
         }
 
         assert(fm_.n_rows == sm_.n_cols);
@@ -51,7 +50,7 @@ class HybridizationMat
         return data_.n_slices;
     }
 
-    ClusterMatrixCD_t slice(const size_t &n)
+    ClusterMatrixCD_t slice(const size_t &n) const
     {
         return data_.slice(n);
     }
@@ -76,7 +75,7 @@ class HybridizationMat
         for (size_t nn = NNBefore; nn < NN; nn++)
         {
             // std::cout << "Patching !" << std::endl;
-            cd_t iwn = cd_t(0.0, (2.0 * nn + 1.0) * M_PI / beta);
+            const cd_t iwn(0.0, (2.0 * nn + 1.0) * M_PI / beta);
             data_.slice(nn) = fm_ / iwn + sm_ / (iwn * iwn);
         }
         // std::cout << "End of patching" << std::endl;
@@ -128,7 +127,6 @@ class NambuCluster0Mat
         fm_ = II;
         std::cout << "Here" << std::endl;
 
-        using arma::kron;
         const ClusterMatrixCD_t tlocNambu = arma::kron(II2x2, tLoc_);
 
         std::cout << "tlocNambu.n_rows = " << tlocNambu.n_rows << std::endl;
@@ -143,7 +141,7 @@ class NambuCluster0Mat
         ClusterMatrixCD_t tmp;
         for (size_t n = 0; n < ll; n++)
         {
-            const cd_t zz = cd_t(mu_, (2.0 * n + 1.0) * M_PI / beta_);
+            const cd_t zz(mu_, (2.0 * n + 1.0) * M_PI / beta_);
             tmp = zz * II - tlocNambu - hyb_.slice(n);
             data_.slice(n) = tmp.i();
         }

@@ -6,7 +6,6 @@
 #include "../Utilities/Matrix.hpp"
 #include "../Utilities/MPIUtilities.hpp"
 #include "../Utilities/Fourier.hpp"
-#include "../Utilities/GreenTau.hpp"
 #include "Obs/Observables.hpp"
 #include "ISData.hpp"
 
@@ -33,12 +32,10 @@ template <typename TIOModel, typename TModel>
 class ABC_MarkovChain
 {
 
-    using GreenTau_t = GreenTau::GreenCluster0Tau<TIOModel>;
-
   public:
     const size_t Nc = TModel::Nc;
     // const double PROBFLIP = 0.25;
-    const double PROBINSERT = 0.25;
+    const double PROBINSERT = 0.33;
     const double PROBREMOVE = 1.0 - PROBINSERT;
 
     ABC_MarkovChain(const Json &jj, const size_t &seed) : modelPtr_(new TModel(jj)),
