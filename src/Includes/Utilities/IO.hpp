@@ -226,19 +226,19 @@ class Base_IOModel
         ClusterCubeCD_t green = greenIn;
         const size_t NN = green.n_slices;
 
-#ifndef AFM
-        //Average the electronic parts
-        using arma::span;
-        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) += -arma::conj(greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)));
-        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) /= 2.0;
-        green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = -arma::conj(green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)));
+        // #ifndef AFM
+        //         //Average the electronic parts
+        //         using arma::span;
+        //         green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) -= arma::conj(greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)));
+        //         green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) /= 2.0;
+        //         green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = -arma::conj(green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)));
 
-        //Average the ANormal Parts
-        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
-        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) /= 2.0;
-        green.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
+        //         //Average the ANormal Parts
+        //         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
+        //         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) /= 2.0;
+        //         green.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
 
-#endif
+        // #endif
 
         //Save in good format, i.e in real nambu format
         green.save(fname + "Nambu.arma");
@@ -260,15 +260,16 @@ class Base_IOModel
 
         fout.open(fname + std::string("Up.dat"), std::ios::out);
 
-#ifdef AFM
+        // #ifdef AFM
         std::ofstream foutDown;
         foutDown.open(fname + std::string("Down.dat"), std::ios::out);
-#endif
+        // #endif
 
         for (size_t nn = 0; nn < green.n_slices; nn++)
         {
             const double iwn = (2.0 * nn + 1.0) * M_PI / beta;
             fout << iwn << " ";
+            foutDown << iwn << " ";
 
             for (Site_t ii = 0; ii < this->indepSites_.size(); ii++)
             {
@@ -280,23 +281,23 @@ class Base_IOModel
                      << std::setprecision(precision) << green(s1, s2, nn).imag()
                      << " ";
 
-#ifdef AFM
+                // #ifdef AFM
                 foutDown << std::setprecision(precision) << green(s1 + Nc, s2 + Nc, nn).real()
                          << " "
                          << std::setprecision(precision) << green(s1 + Nc, s2 + Nc, nn).imag()
                          << " ";
-#endif
+                // #endif
             }
             fout << "\n";
-#ifdef AFM
+            // #ifdef AFM
             foutDown << "\n";
-#endif
+            // #endif
         }
 
         fout.close();
-#ifdef AFM
+        // #ifdef AFM
         foutDown.close();
-#endif
+        // #endif
     }
 
 #ifdef DCA

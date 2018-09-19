@@ -66,7 +66,8 @@ class ABC_Model_2D
                 ClusterMatrixCD_t hybSM;
                 if (!hybNambuData.load("hybNextNambu.arma"))
                 {
-                        hybNambuData = ClusterCubeCD_t(2 * Nc, 2 * Nc, 1).zeros();
+                        hybNambuData.resize(2 * Nc, 2 * Nc, 1);
+                        hybNambuData.slice(0) = ClusterMatrixCD_t(2 * Nc, 2 * Nc).eye() / (cd_t(0.0, M_PI / beta_));
                         // const ClusterMatrix_t II2x2Off = {{0.0, 1.0}, {1.0, 0.0}};
                         // hybSM = arma::kron(II2x2Off, 1e-4 * ioModel_.signFAnormal());
                 }
@@ -80,7 +81,16 @@ class ABC_Model_2D
 
                 hybridizationMat_.PatchHF(NHyb_HF, beta_);
 
-                nambuCluster0Mat_ = NambuMat::NambuCluster0Mat(hybridizationMat_, tLoc_, auxMu(), beta_);
+                const size_t NNambu = 2 * Nc;
+                const ClusterMatrixCD_t II2x2 = ClusterMatrixCD_t(2, 2).eye();
+                const ClusterMatrixCD_t II2x2Nambu = {{cd_t(1.0), cd_t(0.0)}, {cd_t(0.0), cd_t(-1.0)}};
+
+                const ClusterMatrixCD_t II = ClusterMatrixCD_t(NNambu, NNambu).eye();
+                const ClusterMatrixCD_t IINambu = arma::kron(II2x2Nambu, ClusterMatrixCD_t(Nc, Nc).eye());
+
+                const ClusterMatrixCD_t muNambu = mu_ * IINambu - U_ / 2.0 * II;
+
+                nambuCluster0Mat_ = NambuMat::NambuCluster0Mat(hybridizationMat_, tLoc_, muNambu, beta_);
         }
 
         virtual ~ABC_Model_2D() = 0;

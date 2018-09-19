@@ -74,6 +74,7 @@ class SelfConsistency : public ABC_SelfConsistency
 
         const size_t NNambu = 2 * Nc;
         selfEnergy_.resize(NNambu, NNambu, NSelfCon);
+        selfEnergy_.zeros();
 
         //0.) Extraire la self jusqu'a NGreen
         const ClusterMatrixCD_t II2x2Nambu = {{cd_t(1.0), cd_t(0.0)}, {cd_t(0.0), cd_t(-1.0)}};
@@ -261,10 +262,10 @@ class SelfConsistency : public ABC_SelfConsistency
                 for (size_t ktildeindex = 0; ktildeindex < ktildepts; ktildeindex++)
                 {
                     const ClusterMatrixCD_t tkTildeGridNambu = arma::kron(II2x2Nambu, tKTildeGrid.slice(ktildeindex));
-                    gImpUpNext.slice(nn) += ((iwn * IINambu + muNambu - tkTildeGridNambu - selfEnergy_.slice(nn)).i());
+                    gImpUpNext.slice(nn) += (iwn * II + muNambu - tkTildeGridNambu - selfEnergy_.slice(nn)).i();
                 }
                 gImpUpNext.slice(nn) /= static_cast<double>(ktildepts);
-                hybNext_.slice(nn) = -gImpUpNext.slice(nn).i() - selfEnergy_.slice(nn) + iwn * IINambu + muNambu - tLocNambu;
+                hybNext_.slice(nn) = -gImpUpNext.slice(nn).i() - selfEnergy_.slice(nn) + iwn * II + muNambu - tLocNambu;
             }
             std::cout << "Here 2 " << std::endl;
 

@@ -96,21 +96,21 @@ class NambuCluster0Mat
                          data_(),
                          zm_(), fm_(), sm_(), tm_(),
                          tLoc_(),
-                         mu_(),
+                         muNambu_(),
                          beta_(){};
 
     NambuCluster0Mat(const NambuCluster0Mat &gf) : hyb_(gf.hyb_),
                                                    data_(gf.data_),
                                                    zm_(gf.zm_), fm_(gf.fm_), sm_(gf.sm_), tm_(gf.tm_),
                                                    tLoc_(gf.tLoc_),
-                                                   mu_(gf.mu_),
+                                                   muNambu_(gf.muNambu_),
                                                    beta_(gf.beta_){};
 
-    NambuCluster0Mat(const HybridizationMat &hyb, const ClusterMatrixCD_t &tLoc, const double &mu, const double &beta) : hyb_(hyb),
-                                                                                                                         data_(),
-                                                                                                                         tLoc_(tLoc),
-                                                                                                                         mu_(mu),
-                                                                                                                         beta_(beta)
+    NambuCluster0Mat(const HybridizationMat &hyb, const ClusterMatrixCD_t &tLoc, const ClusterMatrixCD_t &muNambu, const double &beta) : hyb_(hyb),
+                                                                                                                                         data_(),
+                                                                                                                                         tLoc_(tLoc),
+                                                                                                                                         muNambu_(muNambu),
+                                                                                                                                         beta_(beta)
     {
         assert(2 * tLoc_.n_rows == hyb.data().n_rows);
         const size_t Nc = tLoc_.n_rows;
@@ -131,12 +131,11 @@ class NambuCluster0Mat
         std::cout << "Here" << std::endl;
 
         const ClusterMatrixCD_t tlocNambu = arma::kron(II2x2Nambu, tLoc_);
-        const ClusterMatrixCD_t muNambu = mu_ * IINambu;
 
         std::cout << "tlocNambu.n_rows = " << tlocNambu.n_rows << std::endl;
         std::cout << "II.n_rows = " << II.n_rows << std::endl;
 
-        const ClusterMatrixCD_t tmpsm = tlocNambu - muNambu;
+        const ClusterMatrixCD_t tmpsm = tlocNambu - muNambu_;
         std::cout << "Here 2" << std::endl;
 
         sm_ = tmpsm;
@@ -146,7 +145,7 @@ class NambuCluster0Mat
         for (size_t n = 0; n < ll; n++)
         {
             const cd_t iwn(0.0, (2.0 * n + 1.0) * M_PI / beta_);
-            tmp = iwn * II + muNambu - tlocNambu - hyb_.slice(n);
+            tmp = iwn * II + muNambu_ - tlocNambu - hyb_.slice(n);
             data_.slice(n) = tmp.i();
         }
     }
@@ -174,7 +173,7 @@ class NambuCluster0Mat
         sm_ = gf.sm_;
         tm_ = gf.tm_;
         tLoc_ = gf.tLoc_;
-        mu_ = gf.mu_;
+        muNambu_ = gf.muNambu_;
         beta_ = gf.beta_;
         hyb_ = gf.hyb_;
         return *this;
@@ -201,8 +200,8 @@ class NambuCluster0Mat
     ClusterMatrixCD_t tm_;
 
     ClusterMatrixCD_t tLoc_;
+    ClusterMatrixCD_t muNambu_;
 
-    double mu_;
     double beta_;
 };
 } // namespace NambuMat
