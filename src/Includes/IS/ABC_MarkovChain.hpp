@@ -85,7 +85,7 @@ class ABC_MarkovChain
 
     virtual double gammaUpTrad(const AuxSpin_t &auxxTo, const AuxSpin_t &vauxFrom) = 0;
     virtual double gammaDownTrad(const AuxSpin_t &auxxTo, const AuxSpin_t &vauxFrom) = 0;
-    virtual double KAux() = 0;
+    virtual double KAux(const AuxSpin_t &aux) = 0;
     virtual double FAuxUp(const AuxSpin_t &aux) = 0;
     virtual double FAuxDown(const AuxSpin_t &aux) = 0;
 
@@ -177,7 +177,8 @@ class ABC_MarkovChain
         else
         {
             AssertSizes();
-            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() * sUp * sDown;
+            const double probProb = modelPtr_->U() * modelPtr_->beta() * static_cast<double>(modelPtr_->Nc);
+            const double ratioAcc = PROBREMOVE / PROBINSERT * probProb * sUp * sDown;
             if (urng_() < std::abs(ratioAcc))
             {
                 if (ratioAcc < 0.0)

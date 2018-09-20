@@ -55,11 +55,11 @@ class ABC_Model_2D
                 assert(tLoc_.load("tloc.arma"));
                 assert(hybFM_.load("hybFM.arma"));
 #endif
-                FinishConstructor();
+                FinishConstructor(jj);
                 mpiUt::Print(" End of ABC_Model Constructor ");
         };
 
-        void FinishConstructor()
+        void FinishConstructor(const Json &jj)
         {
 
                 ClusterCubeCD_t hybNambuData;
@@ -70,6 +70,13 @@ class ABC_Model_2D
                         hybNambuData.slice(0) = ClusterMatrixCD_t(2 * Nc, 2 * Nc).eye() / (cd_t(0.0, M_PI / beta_));
                         // const ClusterMatrix_t II2x2Off = {{0.0, 1.0}, {1.0, 0.0}};
                         // hybSM = arma::kron(II2x2Off, 1e-4 * ioModel_.signFAnormal());
+                }
+
+                if (jj["BREAK_SYMMETRY"].get<bool>() == true)
+                {
+                        using arma::span;
+                        hybNambuData.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, 2)) += 1e-5;
+                        hybNambuData.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, 2)) += 1e-5;
                 }
 
                 const size_t NHyb = hybNambuData.n_slices;
@@ -91,7 +98,7 @@ class ABC_Model_2D
                 const ClusterMatrixCD_t II2x2_10 = {{cd_t(1.0), cd_t(0.0)}, {cd_t(0.0), cd_t(0.0)}};
                 const ClusterMatrixCD_t II_10 = arma::kron(II2x2_10, ClusterMatrixCD_t(Nc, Nc).eye());
 
-                const ClusterMatrixCD_t muNambu = mu_ * IINambu + U_ * II_10; //- U_ / 2.0 * II;
+                const ClusterMatrixCD_t muNambu = mu_ * IINambu - U_ * II_10; //- U_ / 2.0 * II;
 
                 nambuCluster0Mat_ = NambuMat::NambuCluster0Mat(hybridizationMat_, tLoc_, muNambu, beta_);
         }
@@ -113,9 +120,9 @@ class ABC_Model_2D
 
         //Maybe put everything concerning aux spins in vertex class. therfore delta in vertex constructor.
         double auxUp(const AuxSpin_t &aux) const { return ((aux == AuxSpin_t::Up) ? 1.0 + delta_ : -delta_); };
-        double auxDown(const AuxSpin_t &aux) const { return ((aux == AuxSpin_t::Down) ? 1.0 + delta_ : -delta_); };
+        double auxDown(const AuxSpin_t &aux) const { return ((aux == AuxSpin_t::Up) ? 1.0 + delta_ : -delta_); };
 
-        double FAuxUp(const AuxSpin_t &aux)
+        double FAuxUp(const AuxSpin_t &aux) const
         {
                 if (aux == AuxSpin_t::Zero)
                 {
@@ -124,7 +131,7 @@ class ABC_Model_2D
                 return (auxUp(aux) / (auxUp(aux) - 1.0));
         };
 
-        double FAuxDown(const AuxSpin_t &aux)
+        double FAuxDown(const AuxSpin_t &aux) const
         {
                 if (aux == AuxSpin_t::Zero)
                 {
@@ -133,26 +140,23 @@ class ABC_Model_2D
                 return (auxDown(aux) / (auxDown(aux) - 1.0));
         };
 
-        double gammaUp(const AuxSpin_t &auxI, const AuxSpin_t &auxJ) //little gamma
+        double gammaUp(const AuxSpin_t &auxI, const AuxSpin_t &auxJ) const //little gamma
         {
-                double fsJ = FAuxUp(auxJ);
+                const double fsJ = FAuxUp(auxJ);
                 return ((FAuxUp(auxI) - fsJ) / fsJ);
         }
 
-        double gammaDown(const AuxSpin_t &auxI, const AuxSpin_t &auxJ) //little gamma
+        double gammaDown(const AuxSpin_t &auxI, const AuxSpin_t &auxJ) const //little gamma
         {
-                double fsJ = FAuxDown(auxJ);
+                const double fsJ = FAuxDown(auxJ);
                 return ((FAuxDown(auxI) - fsJ) / fsJ);
         }
 
-        double KAux()
+        double KAux(const AuxSpin_t &aux) const
         {
-                return (-U_ * beta_ * Nc / (((1.0 + delta_) / delta_ - 1.0) * (delta_ / (1.0 + delta_) - 1.0)));
+                return (-U_ * beta_ * Nc / ((FAuxUp(aux) - 1.0) * (FAuxDown(aux) - 1.0)));
         }
 
-        double auxU() const { return U_ / 2.0; };
-        double auxMu() const { return mu_ - U_ / 2.0; };
-        double auxDO() const { return delta_ * (1.0 + delta_); };
         double K() const { return K_; };
         double gamma() const { return gamma_; };
 

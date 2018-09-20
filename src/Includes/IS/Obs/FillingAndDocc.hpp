@@ -170,7 +170,6 @@ class FillingAndDocc
         }
 
         // mpiUt::Print("End of MeasureFillingAndDocc");
-        return;
     }
 
     void Finalize(const double &signMeas, const double &NMeas)

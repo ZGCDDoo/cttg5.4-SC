@@ -27,7 +27,7 @@ class MarkovChainAux : public ABC_MarkovChain<TIOModel, TModel>
         return ((FAuxDown(auxTo) - fsJ) / fsJ);
     }
 
-    double KAux() override { return (this->modelPtr_->K()); }
+    double KAux(const AuxSpin_t &aux) override { return (this->modelPtr_->K()); }
 
     double FAuxUp(const AuxSpin_t &aux) override
     {
@@ -49,4 +49,4 @@ class MarkovChainAux : public ABC_MarkovChain<TIOModel, TModel>
 
   private:
 };
-}
+} // namespace Markov
