@@ -6,7 +6,6 @@
 #include "../Utilities/Matrix.hpp"
 #include "../Utilities/MPIUtilities.hpp"
 #include "../Utilities/Fourier.hpp"
-#include "../Utilities/GreenTau.hpp"
 #include "Obs/Observables.hpp"
 #include "ISData.hpp"
 
@@ -23,8 +22,7 @@ typedef LinAlg::Matrix_t Matrix_t;
 struct NFData
 {
 
-    NFData() : F_(), N_(), dummy_(){};
-    SiteVector_t F_;
+    NFData() : N_(), dummy_(){};
     Matrix_t N_;
     Matrix_t dummy_;
 };
@@ -33,12 +31,10 @@ template <typename TIOModel, typename TModel>
 class ABC_MarkovChain
 {
 
-    using GreenTau_t = GreenTau::GreenCluster0Tau<TIOModel>;
-
   public:
     const size_t Nc = TModel::Nc;
     // const double PROBFLIP = 0.25;
-    const double PROBINSERT = 0.25;
+    const double PROBINSERT = 0.33;
     const double PROBREMOVE = 1.0 - PROBINSERT;
 
     ABC_MarkovChain(const Json &jj, const size_t &seed) : modelPtr_(new TModel(jj)),
@@ -89,7 +85,7 @@ class ABC_MarkovChain
 
     virtual double gammaUpTrad(const AuxSpin_t &auxxTo, const AuxSpin_t &vauxFrom) = 0;
     virtual double gammaDownTrad(const AuxSpin_t &auxxTo, const AuxSpin_t &vauxFrom) = 0;
-    virtual double KAux() = 0;
+    virtual double KAux(const AuxSpin_t &aux) = 0;
     virtual double FAuxUp(const AuxSpin_t &aux) = 0;
     virtual double FAuxDown(const AuxSpin_t &aux) = 0;
 
@@ -111,24 +107,20 @@ class ABC_MarkovChain
         const size_t kk = dataCT_->vertices_.size();
         assert(2 * kk == nfdata_.N_.n_rows());
         assert(2 * kk == nfdata_.N_.n_cols());
-        assert(2 * kk == nfdata_.F_.n_elem);
-        std::cout << "kk = " << kk << std::endl;
+        // assert(2 * kk == nfdata_.F_.n_elem);
+        // std::cout << "kk = " << kk << std::endl;
     }
 
     void InsertVertex()
     {
-        std::cout << "In insertvertex" << std::endl;
+        // std::cout << "In insertvertex" << std::endl;
 
         AssertSizes();
         updStats_["Inserts"][0]++;
         Vertex vertex = Vertex(dataCT_->beta_ * urng_(), static_cast<Site_t>(Nc * urng_()), urng_() < 0.5 ? AuxSpin_t::Up : AuxSpin_t::Down);
-        const double fauxup = FAuxUp(vertex.aux());
-        const double fauxdown = FAuxDown(vertex.aux());
-        const double fauxupM1 = fauxup - 1.0;
-        const double fauxdownM1 = fauxdown - 1.0;
 
-        const double sUp = GetGreenTau0Up(vertex, vertex) - modelPtr_->auxUp(vertex.aux());
-        const double sDown = GetGreenTau0Down(vertex, vertex) - modelPtr_->auxDown(vertex.aux());
+        const double sUp = GetGreenTau0Up(vertex, vertex); // The
+        const double sDown = GetGreenTau0Down(vertex, vertex);
 
         if (dataCT_->vertices_.size())
         {
@@ -138,11 +130,9 @@ class ABC_MarkovChain
 
             Matrix_t Q_(2 * kkold, 2);
             Matrix_t R_(2, 2 * kkold);
-            if (kknew >= 5)
-                return;
             //Probably put this in a method
 
-            std::cout << "In INsertvertex before loop " << std::endl;
+            // std::cout << "In INsertvertex before loop " << std::endl;
             for (size_t i = 0; i < kkold; i++)
             {
 
@@ -158,7 +148,7 @@ class ABC_MarkovChain
                 R_(1, 2 * i) = GetFTau0DownUp(vertex, vertexI);       // F_{Down, Up}_{j, p}
                 R_(1, 2 * i + 1) = GetGreenTau0Down(vertex, vertexI); // G_{Down, Down}_{j, p}
             }
-            std::cout << "In INsertvertex After loop " << std::endl;
+            // std::cout << "In INsertvertex After loop " << std::endl;
 
             //Watch out, we are calculating two times the matrix NQ, once here and once in ranktwoupgrade. In a next version, only calculate here, not in ranktwoupgrade.
             // Matrix_t NQ(2 * kkold, 2); //NQ = N*Q
@@ -167,7 +157,8 @@ class ABC_MarkovChain
             // Matrix_t RNQ(2, 2); //R*NQ
             Matrix_t sTilde = Matrix_t({{sUp, 0.0}, {0.0, sDown}}) - LinAlg::DotRank2(R_, nfdata_.N_, Q_);
             sTilde.Inverse();
-            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() / kknew * 1.0 / sTilde.Determinant();
+            const double probProb = modelPtr_->U() * modelPtr_->beta() * static_cast<double>(modelPtr_->Nc);
+            const double ratioAcc = PROBREMOVE / PROBINSERT * probProb / kknew * 1.0 / sTilde.Determinant();
 
             AssertSizes();
             if (urng_() < std::abs(ratioAcc))
@@ -179,9 +170,6 @@ class ABC_MarkovChain
                 }
 
                 LinAlg::BlockRankTwoUpgrade(nfdata_.N_, Q_, R_, sTilde);
-                nfdata_.F_.resize(2 * kkold + 2);
-                nfdata_.F_(2 * kkold) = fauxup;
-                nfdata_.F_(2 * kkold + 1) = fauxdown;
                 dataCT_->vertices_.push_back(vertex);
                 AssertSizes();
             }
@@ -189,7 +177,8 @@ class ABC_MarkovChain
         else
         {
             AssertSizes();
-            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux() * sUp * sDown;
+            const double probProb = modelPtr_->U() * modelPtr_->beta() * static_cast<double>(modelPtr_->Nc);
+            const double ratioAcc = PROBREMOVE / PROBINSERT * probProb * sUp * sDown;
             if (urng_() < std::abs(ratioAcc))
             {
                 if (ratioAcc < 0.0)
@@ -200,28 +189,25 @@ class ABC_MarkovChain
                 nfdata_.N_ = {{1.0 / sUp, 0.0},
                               {0.0, 1.0 / sDown}};
 
-                nfdata_.F_ = SiteVector_t(2);
-                nfdata_.F_(0) = fauxup;
-                nfdata_.F_(1) = fauxdown;
-
                 dataCT_->vertices_.push_back(vertex);
             }
             AssertSizes();
         }
 
-        std::cout << "After insertvertex" << std::endl;
+        // std::cout << "After insertvertex" << std::endl;
     }
 
     void RemoveVertex()
     {
-        return;
         AssertSizes();
         updStats_["Removes"][0]++;
         if (dataCT_->vertices_.size())
         {
             const size_t pp = static_cast<int>(urng_() * dataCT_->vertices_.size());
 
-            const double ratioAcc = PROBINSERT / PROBREMOVE; //* static_cast<double>(dataCT_->vertices_.size()) / KAux() * nfdata_.Nup_(pp, pp) * nfdata_.Ndown_(pp, pp);
+            const ClusterMatrix_t STildeInverse = {{nfdata_.N_(2 * pp, 2 * pp), nfdata_.N_(2 * pp, 2 * pp + 1)}, {nfdata_.N_(2 * pp + 1, 2 * pp), nfdata_.N_(2 * pp + 1, 2 * pp + 1)}};
+            const double probProb = modelPtr_->U() * modelPtr_->beta() * static_cast<double>(modelPtr_->Nc);
+            const double ratioAcc = PROBINSERT / PROBREMOVE * static_cast<double>(dataCT_->vertices_.size()) / probProb * arma::det(STildeInverse);
 
             if (urng_() < std::abs(ratioAcc))
             {
@@ -239,10 +225,6 @@ class ABC_MarkovChain
 
                 LinAlg::BlockDowngrade(nfdata_.N_, 2 * pp, 2);
 
-                nfdata_.F_.swap_rows(2 * pp, 2 * kk - 2);
-                nfdata_.F_.swap_rows(2 * pp + 1, 2 * kk - 1);
-                nfdata_.F_.resize(2 * kkm1);
-
                 std::iter_swap(dataCT_->vertices_.begin() + pp, dataCT_->vertices_.begin() + kk - 1);
                 dataCT_->vertices_.pop_back();
                 AssertSizes();
@@ -250,9 +232,9 @@ class ABC_MarkovChain
         }
     }
 
-    void CleanUpdate(bool print = false)
+    void CleanUpdate()
     {
-        mpiUt::Print("Cleaning, sign, k =  " + std::to_string(dataCT_->sign_) + ",  " + std::to_string(dataCT_->vertices_.size()));
+        // mpiUt::Print("Cleaning, sign, k =  " + std::to_string(dataCT_->sign_) + ",  " + std::to_string(dataCT_->vertices_.size()));
         const size_t kk = dataCT_->vertices_.size();
         if (kk == 0)
         {
@@ -269,12 +251,6 @@ class ABC_MarkovChain
                 nfdata_.N_(2 * i, 2 * j + 1) = GetFTau0UpDown(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));       //Up Down Anormal
                 nfdata_.N_(2 * i + 1, 2 * j) = GetFTau0DownUp(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));       //Down Up Anormal
                 nfdata_.N_(2 * i + 1, 2 * j + 1) = GetGreenTau0Down(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)); //Down Down Normal
-
-                if (i == j)
-                {
-                    nfdata_.N_(2 * i, 2 * i) -= modelPtr_->auxUp(dataCT_->vertices_.at(i).aux());
-                    nfdata_.N_(2 * i + 1, 2 * i + 1) -= modelPtr_->auxDown(dataCT_->vertices_.at(i).aux());
-                }
             }
         }
         AssertSizes();
@@ -284,36 +260,29 @@ class ABC_MarkovChain
 
     double GetGreenTau0Up(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-        return (dataCT_->green0CachedUp_(vertexI.site(), vertexJ.site(), vertexI.tau() - vertexJ.tau()));
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), vertexI.tau() - vertexJ.tau(), {FermionSpin_t::Up, FermionSpin_t::Up}));
     }
 
     // In fact return -g_Down(-tau) (nambu version of gdown)
     double GetGreenTau0Down(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-
-#ifdef AFM
-        return (dataCT_->green0CachedDown_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau())));
-#else
-        return (dataCT_->green0CachedUp_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau())));
-
-#endif
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {FermionSpin_t::Down, FermionSpin_t::Down}));
     }
 
     double GetFTau0DownUp(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-        return 0.0;
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {FermionSpin_t::Down, FermionSpin_t::Up}));
     }
 
     double GetFTau0UpDown(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-        return 0.0;
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {FermionSpin_t::Up, FermionSpin_t::Down}));
     }
 
     void Measure()
     {
-        SiteVector_t FVM1 = -(nfdata_.F_ - 1.0);
-        // DDMGMM(FVM1, nfdata_.N_, *(dataCT_->MPtr_));
-        // obs_.Measure();
+        *(dataCT_->MPtr_) = nfdata_.N_;
+        obs_.Measure();
     }
 
     void SaveMeas()
