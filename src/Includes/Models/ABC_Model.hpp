@@ -88,7 +88,10 @@ class ABC_Model_2D
                 const ClusterMatrixCD_t II = ClusterMatrixCD_t(NNambu, NNambu).eye();
                 const ClusterMatrixCD_t IINambu = arma::kron(II2x2Nambu, ClusterMatrixCD_t(Nc, Nc).eye());
 
-                const ClusterMatrixCD_t muNambu = mu_ * IINambu - U_ / 2.0 * II;
+                const ClusterMatrixCD_t II2x2_10 = {{cd_t(1.0), cd_t(0.0)}, {cd_t(0.0), cd_t(0.0)}};
+                const ClusterMatrixCD_t II_10 = arma::kron(II2x2_10, ClusterMatrixCD_t(Nc, Nc).eye());
+
+                const ClusterMatrixCD_t muNambu = mu_ * IINambu + U_ * II_10; //- U_ / 2.0 * II;
 
                 nambuCluster0Mat_ = NambuMat::NambuCluster0Mat(hybridizationMat_, tLoc_, muNambu, beta_);
         }

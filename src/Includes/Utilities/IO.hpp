@@ -226,19 +226,19 @@ class Base_IOModel
         ClusterCubeCD_t green = greenIn;
         const size_t NN = green.n_slices;
 
-        // #ifndef AFM
-        //         //Average the electronic parts
-        //         using arma::span;
-        //         green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) -= arma::conj(greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)));
-        //         green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) /= 2.0;
-        //         green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = -arma::conj(green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)));
+#ifndef AFM
+        //Average the electronic parts
+        using arma::span;
+        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) -= arma::conj(greenIn.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)));
+        green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)) /= 2.0;
+        green.subcube(span(Nc, 2 * Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = -arma::conj(green.subcube(span(0, Nc - 1), span(0, Nc - 1), span(0, NN - 1)));
 
-        //         //Average the ANormal Parts
-        //         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
-        //         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) /= 2.0;
-        //         green.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
+        //Average the ANormal Parts
+        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
+        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) /= 2.0;
+        green.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
 
-        // #endif
+#endif
 
         //Save in good format, i.e in real nambu format
         green.save(fname + "Nambu.arma");
