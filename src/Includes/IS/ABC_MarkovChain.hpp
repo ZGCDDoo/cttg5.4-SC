@@ -118,7 +118,7 @@ class ABC_MarkovChain
 
         AssertSizes();
         updStats_["Inserts"][0]++;
-        Vertex vertex = Vertex(dataCT_->beta_ * urng_(), static_cast<Site_t>(Nc * urng_()), urng_() < 0.5 ? AuxSpin_t::Up : AuxSpin_t::Down);
+        const Vertex vertex = Vertex(dataCT_->beta_ * urng_(), static_cast<Site_t>(Nc * urng_()), urng_() < 0.5 ? AuxSpin_t::Up : AuxSpin_t::Down);
 
         const double fauxup = FAuxUp(vertex.aux());
         const double fauxdown = FAuxDown(vertex.aux());
@@ -163,8 +163,7 @@ class ABC_MarkovChain
             // Matrix_t RNQ(2, 2); //R*NQ
             Matrix_t sTilde = Matrix_t({{sUp, 0.0}, {0.0, sDown}}) - LinAlg::DotRank2(R_, nfdata_.N_, Q_);
             sTilde.Inverse();
-            const double probProb = modelPtr_->U() * modelPtr_->beta() * static_cast<double>(modelPtr_->Nc);
-            const double ratioAcc = PROBREMOVE / PROBINSERT * probProb / kknew * 1.0 / sTilde.Determinant();
+            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux(vertex.aux()) / kknew * 1.0 / sTilde.Determinant();
 
             AssertSizes();
             if (urng_() < std::abs(ratioAcc))
@@ -186,8 +185,7 @@ class ABC_MarkovChain
         else
         {
             AssertSizes();
-            const double probProb = modelPtr_->U() * modelPtr_->beta() * static_cast<double>(modelPtr_->Nc);
-            const double ratioAcc = PROBREMOVE / PROBINSERT * probProb * sUp * sDown;
+            const double ratioAcc = PROBREMOVE / PROBINSERT * KAux(vertex.aux()) * sUp * sDown;
             if (urng_() < std::abs(ratioAcc))
             {
                 if (ratioAcc < 0.0)
@@ -201,6 +199,8 @@ class ABC_MarkovChain
                 nfdata_.F_ = SiteVector_t(2);
                 nfdata_.F_(0) = fauxup;
                 nfdata_.F_(1) = fauxdown;
+
+                dataCT_->vertices_.push_back(vertex);
             }
             AssertSizes();
         }
@@ -215,10 +215,9 @@ class ABC_MarkovChain
         if (dataCT_->vertices_.size())
         {
             const size_t pp = static_cast<int>(urng_() * dataCT_->vertices_.size());
-
+            const Vertex vertex = dataCT_->vertices_.at(pp);
             const ClusterMatrix_t STildeInverse = {{nfdata_.N_(2 * pp, 2 * pp), nfdata_.N_(2 * pp, 2 * pp + 1)}, {nfdata_.N_(2 * pp + 1, 2 * pp), nfdata_.N_(2 * pp + 1, 2 * pp + 1)}};
-            const double probProb = modelPtr_->U() * modelPtr_->beta() * static_cast<double>(modelPtr_->Nc);
-            const double ratioAcc = PROBINSERT / PROBREMOVE * static_cast<double>(dataCT_->vertices_.size()) / probProb * arma::det(STildeInverse);
+            const double ratioAcc = PROBINSERT / PROBREMOVE * static_cast<double>(dataCT_->vertices_.size()) / KAux(vertex.aux()) * arma::det(STildeInverse);
 
             if (urng_() < std::abs(ratioAcc))
             {

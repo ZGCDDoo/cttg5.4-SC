@@ -27,7 +27,7 @@ class MarkovChainAuxSub : public ABC_MarkovChainSubMatrix<TIOModel, TModel>
         return ((FAuxDown(auxTo) - fsJ) / fsJ);
     }
 
-    double KAux() override { return (this->model_.K()); }
+    double KAux(const AuxSpin_t &aux) override { return (this->model_.K()); }
 
     double FAuxUp(const AuxSpin_t &aux) override
     {
