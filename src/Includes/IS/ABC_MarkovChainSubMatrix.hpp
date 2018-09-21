@@ -27,22 +27,18 @@ extern "C"
 
 struct GammaData
 {
-    GammaData() : gammaUpI_(), gammaDownI_(){};
-    Matrix_t gammaUpI_;
-    Matrix_t gammaDownI_;
+    GammaData() : gammaI_(){};
+    Matrix_t gammaI_;
 };
 
 struct UpdData
 {
-    UpdData() : xup_(), yup_(), xdown_(), ydown_(){};
+    UpdData() : x_(), y_(){};
 
-    SiteVector_t xup_; //New row to insert
-    SiteVector_t yup_; //New column to insert
-    SiteVector_t xdown_;
-    SiteVector_t ydown_;
+    Matrix_t x_; //New Matrix-row to insert
+    Matrix_t y_; //New Matrix-column to insert
 
-    SiteVector_t gammaUpIYup_; // gammaUpI_*yup;
-    SiteVector_t gammaDownIYdown_;
+    Matrix_t gammaIY_; // gammaI_*y_;
     double dup_;
     double ddown_;
     double dTildeUpI_;
@@ -50,31 +46,25 @@ struct UpdData
 
     void SetSize(const size_t &kk)
     {
-        xup_.set_size(kk);
-        yup_.set_size(kk);
-        xdown_.set_size(kk);
-        ydown_.set_size(kk);
-        gammaUpIYup_.set_size(kk);
-        gammaDownIYdown_.set_size(kk);
+        x_.set_size(kk);
+        y_.set_size(kk);
+        gammaIY_.set_size(kk);
     }
 };
 
 struct NFData
 {
 
-    NFData() : FVup_(), FVdown_(), Nup_(), Ndown_(){};
-    SiteVector_t FVup_;
-    SiteVector_t FVdown_;
-    Matrix_t Nup_;
-    Matrix_t Ndown_;
+    NFData() : FV_(), N_(){};
+    SiteVector_t FV_;
+    Matrix_t N_;
 };
 
 struct GreenData
 {
 
-    GreenData() : greenInteractUp_(), greenInteractDown_(){};
+    GreenData() : greenInteract_(){};
     Matrix_t greenInteractUp_;
-    Matrix_t greenInteractDown_;
 };
 
 template <typename TIOModel, typename TModel>
@@ -121,18 +111,17 @@ class ABC_MarkovChainSubMatrix
     {
         return model_;
     };
-    Matrix_t Nup() const
+
+    Matrix_t N() const
     {
-        return nfdata_.Nup_;
+        return nfdata_.N_;
     };
-    Matrix_t Ndown() const
-    {
-        return nfdata_.Ndown_;
-    };
+
     std::vector<Vertex> vertices() const
     {
         return dataCT_->vertices_;
     };
+
     double beta() const
     {
         return dataCT_->beta_;
@@ -146,36 +135,20 @@ class ABC_MarkovChainSubMatrix
     void AssertSizes()
     {
         const size_t kk = dataCT_->vertices_.size();
-        assert(kk == nfdata_.Nup_.n_rows());
-        assert(kk == nfdata_.Nup_.n_cols());
-        assert(kk == nfdata_.Ndown_.n_rows());
-        assert(kk == nfdata_.Ndown_.n_cols());
+        assert(2 * kk == nfdata_.N_.n_rows());
+        assert(2 * kk == nfdata_.N_.n_cols());
+        assert(2 * kk == nfdata_.FV_.n_elem());
     }
 
     virtual double gammaUpSubMatrix(const AuxSpin_t &auxxTo, const AuxSpin_t &vauxFrom) = 0;
     virtual double gammaDownSubMatrix(const AuxSpin_t &auxxTo, const AuxSpin_t &vauxFrom) = 0;
-    virtual double KAux() = 0;
+    virtual double KAux(const AuxSpin_t &aux) = 0;
     virtual double FAuxUp(const AuxSpin_t &aux) = 0;
     virtual double FAuxDown(const AuxSpin_t &aux) = 0;
 
     void ThermalizeFromConfig()
     {
-        if (mpiUt::LoadConfig(dataCT_->vertices_))
-        {
-            const size_t kk = dataCT_->vertices_.size();
-            nfdata_.FVup_ = SiteVector_t(kk);
-            nfdata_.FVdown_ = SiteVector_t(kk);
-            for (size_t i = 0; i < kk; i++)
-            {
-                AuxSpin_t aux = dataCT_->vertices_[i].aux();
-                nfdata_.FVup_(i) = FAuxUp(aux);
-                nfdata_.FVdown_(i) = FAuxDown(aux);
-            }
-
-            nfdata_.Nup_.Resize(kk, kk);
-            nfdata_.Ndown_.Resize(kk, kk);
-            CleanUpdate();
-        }
+        assert(false);
     }
 
     void DoStep()
@@ -195,25 +168,18 @@ class ABC_MarkovChainSubMatrix
     void DoInnerStep()
     {
 
-        // if (urng_() < PROBFLIP_)
-        // {
-        //     FlipAuxSubMatrix();
-        // }
-        // else
-        // {
         urng_() < PROBINSERT ? InsertVertexSubMatrix() : RemoveVertexSubMatrix();
-        // }
     }
 
     double CalculateDeterminantRatio(const Vertex &vertexTo, const Vertex &vertexFrom, const size_t &vertexIndex)
     {
         // std::cout << "in calculate determinant " << std::endl;
 
-        AuxSpin_t auxTo = vertexTo.aux();
-        AuxSpin_t auxFrom = vertexFrom.aux();
-        double ratio;
-        double gammakup = gammaUpSubMatrix(auxTo, auxFrom);
-        double gammakdown = gammaDownSubMatrix(auxTo, auxFrom);
+        const AuxSpin_t auxTo = vertexTo.aux();
+        const AuxSpin_t auxFrom = vertexFrom.aux();
+        const double ratio;
+        const double gammakup = gammaUpSubMatrix(auxTo, auxFrom);
+        const double gammakdown = gammaDownSubMatrix(auxTo, auxFrom);
         upddata_.dup_ = (greendata_.greenInteractUp_(vertexIndex, vertexIndex) - (1.0 + gammakup) / gammakup);
         upddata_.ddown_ = (greendata_.greenInteractDown_(vertexIndex, vertexIndex) - (1.0 + gammakdown) / gammakdown);
 
@@ -405,65 +371,62 @@ class ABC_MarkovChainSubMatrix
 
     void CleanUpdate()
     {
-        //mpiUt::Print("Cleaning, sign, k =  " + std::to_string(dataCT_->sign_) + ",  " + std::to_string(dataCT_->vertices_.size()));
+        // mpiUt::Print("Cleaning, sign, k =  " + std::to_string(dataCT_->sign_) + ",  " + std::to_string(dataCT_->vertices_.size()));
         const size_t kk = dataCT_->vertices_.size();
         if (kk == 0)
         {
             return;
         }
+
         AssertSizes();
         for (size_t i = 0; i < kk; i++)
         {
             for (size_t j = 0; j < kk; j++)
             {
 
-                nfdata_.Nup_(i, j) = -GetGreenTau0Up(dataCT_->vertices_[i], dataCT_->vertices_[j]) * (nfdata_.FVup_(j) - 1.0);
-                nfdata_.Ndown_(i, j) = -GetGreenTau0Down(dataCT_->vertices_[i], dataCT_->vertices_[j]) * (nfdata_.FVdown_(j) - 1.0);
+                nfdata_.N_(2 * i, 2 * j) = -GetGreenTau0Up(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)) * (nfdata_.F_(2 * j) - 1.0);               //Up Up Normal
+                nfdata_.N_(2 * i, 2 * j + 1) = -GetFTau0UpDown(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));                                       //Up Down Anormal
+                nfdata_.N_(2 * i + 1, 2 * j) = -GetFTau0DownUp(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j));                                       //Down Up Anormal
+                nfdata_.N_(2 * i + 1, 2 * j + 1) = -GetGreenTau0Down(dataCT_->vertices_.at(i), dataCT_->vertices_.at(j)) * (nfdata_.F_(2 * j + 1) - 1.0); //Down Down Normal
 
                 if (i == j)
                 {
-                    nfdata_.Nup_(i, i) += nfdata_.FVup_(i);
-                    nfdata_.Ndown_(i, i) += nfdata_.FVdown_(i);
+                    nfdata_.N_(2 * i, 2 * i) += nfdata_.F_(2 * i);
+                    nfdata_.N_(2 * i + 1, 2 * i + 1) += nfdata_.F_(2 * i + 1);
                 }
             }
         }
         AssertSizes();
 
-        nfdata_.Nup_.Inverse();
-        nfdata_.Ndown_.Inverse();
+        nfdata_.N_.Inverse();
     }
 
     double GetGreenTau0Up(const Vertex &vertexI, const Vertex &vertexJ) const
     {
-        return (dataCT_->green0CachedUp_(vertexI.site(), vertexJ.site(), vertexI.tau() - (vertexJ.tau() + 1e-12)));
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), vertexI.tau() - vertexJ.tau(), {FermionSpin_t::Up, FermionSpin_t::Up}));
     }
 
+    // In fact return -g_Down(-tau) (nambu version of gdown)
     double GetGreenTau0Down(const Vertex &vertexI, const Vertex &vertexJ) const
     {
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {FermionSpin_t::Down, FermionSpin_t::Down}));
+    }
 
-#ifndef AFM
-        return GetGreenTau0Up(vertexI, vertexJ);
-#endif
+    double GetFTau0DownUp(const Vertex &vertexI, const Vertex &vertexJ) const
+    {
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {FermionSpin_t::Down, FermionSpin_t::Up}));
+    }
 
-#ifdef AFM
-        const double delta = 1e-12;
-        // 1e-20;
-        Tau_t tauDiff = vertexI.tau() - (vertexJ.tau() + delta);
-        Site_t s1 = vertexI.site(); //model_.indepSites().at(ll).first;
-        Site_t s2 = vertexJ.site(); //model_.indepSites().at(ll).second;
-        return (dataCT_->green0CachedDown_(s1, s2, tauDiff));
-#endif
+    double GetFTau0UpDown(const Vertex &vertexI, const Vertex &vertexJ) const
+    {
+        return (dataCT_->nambu0Cached_(vertexI.site(), vertexJ.site(), (vertexI.tau() - vertexJ.tau()), {FermionSpin_t::Up, FermionSpin_t::Down}));
     }
 
     void Measure()
     {
-        AssertSizes();
-        SiteVector_t FVupM1 = -(nfdata_.FVup_ - 1.0);
-        SiteVector_t FVdownM1 = -(nfdata_.FVdown_ - 1.0);
-        DDMGMM(FVupM1, nfdata_.Nup_, *(dataCT_->MupPtr_));
-        DDMGMM(FVdownM1, nfdata_.Ndown_, *(dataCT_->MdownPtr_));
+        const SiteVector_t FVM1 = -(nfdata_.F_ - 1.0);
+        DDMGMM(FVM1, nfdata_.N_, *(dataCT_->MPtr_));
         obs_.Measure();
-        AssertSizes();
     }
 
     void SaveMeas()
