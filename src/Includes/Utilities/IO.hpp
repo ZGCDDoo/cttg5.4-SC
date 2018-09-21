@@ -367,6 +367,8 @@ class Base_IOModel
         fullMatrix.zeros();
 
         fullMatrix.submat(0, 0, Nc - 1, Nc - 1) = this->IndepToFull(indepElements.row(0));
+        fullMatrix.submat(0, Nc, Nc - 1, 2 * Nc - 1) = this->IndepToFull(indepElements.row(1));
+        fullMatrix.submat(Nc, 0, 2 * Nc - 1, Nc - 1) = this->IndepToFull(indepElements.row(2));
         fullMatrix.submat(Nc, Nc, 2 * Nc - 1, 2 * Nc - 1) = IndepToFull(indepElements.row(3));
 
         // std::cout << "End of indeptofullnambu " << std::endl;
