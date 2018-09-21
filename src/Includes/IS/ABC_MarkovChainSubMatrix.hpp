@@ -239,8 +239,7 @@ class ABC_MarkovChainSubMatrix
         // std::cout << "after accept move " << std::endl;
     }
 
-    void
-    RemoveVertexSubMatrix()
+    void RemoveVertexSubMatrix()
     {
         // std::cout << "in remove " << std::endl;
         if (vertices0_.size() && verticesRemovable_.size())
@@ -259,9 +258,8 @@ class ABC_MarkovChainSubMatrix
 
                 vertex.SetAux(AuxSpin_t::Zero);
 
-                double ratio = CalculateDeterminantRatio(vertex, vertices0Tilde_.at(vertexIndex), vertexIndex);
-                double probAcc = double(nPhyscialVertices_) * ratio / KAux();
-                probAcc *= PROBINSERT / PROBREMOVE;
+                const double ratio = CalculateDeterminantRatio(vertex, vertices0Tilde_.at(vertexIndex), vertexIndex);
+                const double probAcc = PROBINSERT / PROBREMOVE * static_cast<double>(nPhyscialVertices_) * ratio / KAux();
 
                 if (urng_() < std::abs(probAcc))
                 {
@@ -271,8 +269,8 @@ class ABC_MarkovChainSubMatrix
                     verticesRemovable_.erase(verticesRemovable_.begin() + ii);
                     dataCT_->vertices_.at(vertexIndex) = vertex;
                     nPhyscialVertices_ -= 1;
-                    nfdata_.FVup_(vertexIndex) = 1.0;
-                    nfdata_.FVdown_(vertexIndex) = 1.0;
+                    nfdata_.FV_(2 * vertexIndex) = 1.0;
+                    nfdata_.FV_(2 * vertexIndex + 1) = 1.0;
 
                     AcceptMove(probAcc);
                 }

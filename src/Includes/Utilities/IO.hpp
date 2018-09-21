@@ -264,12 +264,15 @@ class Base_IOModel
         std::ofstream foutDown;
         foutDown.open(fname + std::string("Down.dat"), std::ios::out);
         // #endif
+        std::ofstream foutF;
+        foutF.open(fname + std::string("Anormal.dat"), std::ios::out);
 
         for (size_t nn = 0; nn < green.n_slices; nn++)
         {
             const double iwn = (2.0 * nn + 1.0) * M_PI / beta;
             fout << iwn << " ";
             foutDown << iwn << " ";
+            foutF << iwn << " ";
 
             for (Site_t ii = 0; ii < this->indepSites_.size(); ii++)
             {
@@ -287,17 +290,24 @@ class Base_IOModel
                          << std::setprecision(precision) << green(s1 + Nc, s2 + Nc, nn).imag()
                          << " ";
                 // #endif
+
+                foutF << std::setprecision(precision) << green(s1, s2 + Nc, nn).real()
+                      << " "
+                      << std::setprecision(precision) << green(s1, s2 + Nc, nn).imag()
+                      << " ";
             }
             fout << "\n";
             // #ifdef AFM
             foutDown << "\n";
             // #endif
+            foutF << "\n";
         }
 
         fout.close();
         // #ifdef AFM
         foutDown.close();
         // #endif
+        foutF.close();
     }
 
 #ifdef DCA
