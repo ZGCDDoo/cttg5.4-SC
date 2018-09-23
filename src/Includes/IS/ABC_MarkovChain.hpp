@@ -125,7 +125,9 @@ class ABC_MarkovChain
         const double fauxupM1 = fauxup - 1.0;
         const double fauxdownM1 = fauxdown - 1.0;
 
-        const double sUp = -fauxup + GetGreenTau0Up(vertex, vertex) * fauxupM1; // The
+        const double sUp = -fauxup + GetGreenTau0Up(vertex, vertex) * fauxupM1;
+        const double sUpDown = GetFTau0UpDown(vertex, vertex);
+        const double sDownUp = GetFTau0UpDown(vertex, vertex);
         const double sDown = -fauxdown + GetGreenTau0Down(vertex, vertex) * fauxdownM1;
 
         if (dataCT_->vertices_.size())
@@ -161,7 +163,7 @@ class ABC_MarkovChain
             // MatrixVectorMult(nfdata_.N_, Q_, 1.0, NQUp);
 
             // Matrix_t RNQ(2, 2); //R*NQ
-            Matrix_t sTilde = Matrix_t({{sUp, 0.0}, {0.0, sDown}}) - LinAlg::DotRank2(R_, nfdata_.N_, Q_);
+            Matrix_t sTilde = Matrix_t({{sUp, sUpDown}, {sDownUp, sDown}}) - LinAlg::DotRank2(R_, nfdata_.N_, Q_);
             sTilde.Inverse();
             const double ratioAcc = PROBREMOVE / PROBINSERT * KAux(vertex.aux()) / kknew * 1.0 / sTilde.Determinant();
 

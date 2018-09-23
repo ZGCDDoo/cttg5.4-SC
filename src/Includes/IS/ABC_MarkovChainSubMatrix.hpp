@@ -64,7 +64,7 @@ struct GreenData
 {
 
     GreenData() : greenInteract_(){};
-    Matrix_t greenInteractUp_;
+    Matrix_t greenInteract_;
 };
 
 template <typename TIOModel, typename TModel>
@@ -179,6 +179,8 @@ class ABC_MarkovChainSubMatrix
         const AuxSpin_t auxFrom = vertexFrom.aux();
         const double ratio;
         const double gammakup = gammaUpSubMatrix(auxTo, auxFrom);
+        const double gammakupDown = gammaUpSubMatrix(auxTo, auxFrom);
+
         const double gammakdown = gammaDownSubMatrix(auxTo, auxFrom);
         upddata_.dup_ = (greendata_.greenInteractUp_(vertexIndex, vertexIndex) - (1.0 + gammakup) / gammakup);
         upddata_.ddown_ = (greendata_.greenInteractDown_(vertexIndex, vertexIndex) - (1.0 + gammakdown) / gammakdown);

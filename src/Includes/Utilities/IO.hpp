@@ -236,6 +236,13 @@ class Base_IOModel
         //Average the ANormal Parts
         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) += greenIn.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1));
         green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) /= 2.0;
+
+        //Set Imaginary part to zero
+        ClusterCubeCD_t greenTmp(2 * Nc, 2 * Nc, NN);
+        greenTmp.zeros();
+        greenTmp.set_real(arma::real(greenIn));
+
+        green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1)) = greenTmp.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
         green.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, NN - 1)) = green.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, NN - 1));
 
 #endif
@@ -341,7 +348,7 @@ class Base_IOModel
     //elements of that matrix
 
     template <typename T1_t, typename T2_t = ClusterMatrixCD_t>
-    T2_t IndepToFull(const T1_t &indepElements) //in practice will be a Sitevector_t or SitevectorCD_t
+    T2_t IndepToFull(const T1_t &indepElements, const bool &isAnormal = false) //in practice will be a Sitevector_t or SitevectorCD_t
     {
 
         T2_t fullMatrix(Nc, Nc);
@@ -352,6 +359,10 @@ class Base_IOModel
             {
                 size_t index = FindIndepSiteIndex(ii, jj);
                 fullMatrix(ii, jj) = indepElements(index);
+                if (isAnormal)
+                {
+                    fullMatrix(ii, jj) *= signFAnormal_(ii, jj);
+                }
             }
         }
 
@@ -367,8 +378,8 @@ class Base_IOModel
         fullMatrix.zeros();
 
         fullMatrix.submat(0, 0, Nc - 1, Nc - 1) = this->IndepToFull(indepElements.row(0));
-        fullMatrix.submat(0, Nc, Nc - 1, 2 * Nc - 1) = this->IndepToFull(indepElements.row(1));
-        fullMatrix.submat(Nc, 0, 2 * Nc - 1, Nc - 1) = this->IndepToFull(indepElements.row(2));
+        fullMatrix.submat(0, Nc, Nc - 1, 2 * Nc - 1) = this->IndepToFull(indepElements.row(1), true);
+        fullMatrix.submat(Nc, 0, 2 * Nc - 1, Nc - 1) = this->IndepToFull(indepElements.row(2), true);
         fullMatrix.submat(Nc, Nc, 2 * Nc - 1, 2 * Nc - 1) = IndepToFull(indepElements.row(3));
 
         // std::cout << "End of indeptofullnambu " << std::endl;
@@ -536,6 +547,7 @@ class IOSquare2x2_AFM : public Base_IOModel<Nx2, Nx2>
             {{0, 3}, {0, 1}, {0, 1}, {0, 0}}};
 
         this->downEquivalentSites_ = {1, 0, 2, 4, 3};
+
         FinishConstructor();
     }
 };

@@ -74,9 +74,14 @@ class ABC_Model_2D
 
                 if (jj["BREAK_SYMMETRY"].get<bool>() == true)
                 {
-                        using arma::span;
-                        hybNambuData.subcube(span(0, Nc - 1), span(Nc, 2 * Nc - 1), span(0, 2)) += 1e-5;
-                        hybNambuData.subcube(span(Nc, 2 * Nc - 1), span(0, Nc - 1), span(0, 2)) += 1e-5;
+                        for (size_t ii = 0; ii < Nc; ii++)
+                        {
+                                for (size_t jj = 0; jj < Nc; jj++)
+                                {
+                                        hybNambuData(ii, jj + Nc, 0) = 1e-1 * ioModel_.SignFAnormal(ii, jj);
+                                        hybNambuData(ii + Nc, jj, 0) = hybNambuData(ii, jj + Nc, 0);
+                                }
+                        }
                 }
 
                 const size_t NHyb = hybNambuData.n_slices;

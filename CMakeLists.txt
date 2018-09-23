@@ -117,7 +117,7 @@ endif ()
 
 ################################
 set(EXECECUTABLES
-    cttg
+    cttg_sc
     #cttg_sub
     #cttg_afm
     #cttg_sub_afm
