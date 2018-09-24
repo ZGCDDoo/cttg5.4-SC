@@ -127,7 +127,7 @@ class ABC_MarkovChain
 
         const double sUp = -fauxup + GetGreenTau0Up(vertex, vertex) * fauxupM1;
         const double sUpDown = GetFTau0UpDown(vertex, vertex);
-        const double sDownUp = GetFTau0UpDown(vertex, vertex);
+        const double sDownUp = GetFTau0DownUp(vertex, vertex);
         const double sDown = -fauxdown + GetGreenTau0Down(vertex, vertex) * fauxdownM1;
 
         if (dataCT_->vertices_.size())

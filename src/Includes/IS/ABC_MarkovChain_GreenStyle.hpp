@@ -1,4 +1,7 @@
 #pragma once
+
+#define GREEN_STYLE
+
 #include <valarray>
 
 #include "../Utilities/Utilities.hpp"
