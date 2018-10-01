@@ -184,10 +184,10 @@ if (${TEST})
 
     set(TESTS
     Fourier_DCATests
-    FourierTests
+    #FourierTests
     FillingAndDoccTests
     GreenBinningTests
-    GreenMatTests
+    #GreenMatTests
     GreenTauTests
     H0TriangleTests
     #HybFMAndTLocTests

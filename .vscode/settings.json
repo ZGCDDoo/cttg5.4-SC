@@ -79,6 +79,7 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeindex": "cpp",
-        "armadillo": "cpp"
+        "armadillo": "cpp",
+        "strstream": "cpp"
     }
 }

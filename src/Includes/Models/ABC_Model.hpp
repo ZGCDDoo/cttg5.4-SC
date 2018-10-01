@@ -66,21 +66,19 @@ class ABC_Model_2D
                 ClusterMatrixCD_t hybSM;
                 if (!hybNambuData.load("hybNextNambu.arma"))
                 {
-                        hybNambuData.resize(2 * Nc, 2 * Nc, 1);
-                        hybNambuData.slice(0) = ClusterMatrixCD_t(2 * Nc, 2 * Nc).eye() / (cd_t(0.0, M_PI / beta_));
-                        // const ClusterMatrix_t II2x2Off = {{0.0, 1.0}, {1.0, 0.0}};
-                        // hybSM = arma::kron(II2x2Off, 1e-4 * ioModel_.signFAnormal());
-                }
+                        const size_t NN = 100;
+                        hybNambuData.resize(2 * Nc, 2 * Nc, NN);
+                        const ClusterMatrix_t II2x2Off = {{0.0, 1.0}, {1.0, 0.0}};
+                        const ClusterMatrixCD_t II2x2 = {{cd_t(1.0), cd_t(0.0)}, {cd_t(0.0), cd_t(1.0)}};
 
-                if (jj["BREAK_SYMMETRY"].get<bool>() == true)
-                {
-                        for (size_t ii = 0; ii < Nc; ii++)
+                        const ClusterMatrix_t hybSM = arma::kron(II2x2Off, ioModel_.signFAnormal());
+                        const ClusterMatrixCD_t hybFM = arma::kron(II2x2, hybFM_);
+
+                        for (size_t nn = 0; nn < NN; nn++)
                         {
-                                for (size_t jj = 0; jj < Nc; jj++)
-                                {
-                                        hybNambuData(ii, jj + Nc, 0) = 1e-1 * ioModel_.SignFAnormal(ii, jj);
-                                        hybNambuData(ii + Nc, jj, 0) = hybNambuData(ii, jj + Nc, 0);
-                                }
+                                const cd_t iwn(0.0, (2.0 * nn + 1.0) * M_PI / beta_);
+                                const double wn = iwn.imag();
+                                hybNambuData.slice(nn) = hybFM / (iwn) + hybSM / (1.0 + wn * wn);
                         }
                 }
 

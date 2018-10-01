@@ -62,6 +62,7 @@ void PrepareNextIter(const std::string paramsName, const size_t &iter)
 
     copy_file("selfUp.dat", std::string("selfUp") + std::to_string(iter) + ext);
     copy_file("greenUp.dat", std::string("greenUp") + std::to_string(iter) + ext);
+    copy_file("greenAnormal.dat", std::string("greenAnormal") + std::to_string(iter) + ext);
     copy_file("Obs.json", std::string("Obs") + std::to_string(iter) + ".json");
     copy_file("upd.meas.json", std::string("upd.meas") + std::to_string(iter) + ".json");
     // copy_file("gtau.dat", std::string("g0tau") + std::to_string(iter) + ext);

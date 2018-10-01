@@ -170,6 +170,8 @@ class Base_IOModel
         ClusterMatrix_t fileMat;
         ClusterMatrixCD_t tmp(Nc, Nc);
         fileMat.load(filename);
+        assert(!fileMat.has_nan());
+        assert(!fileMat.has_inf());
         assert(fileMat.n_cols == 2 * this->indepSites_.size() + 1);
         fileMat.shed_col(0); // we dont want the matsubara frequencies
 
@@ -223,6 +225,8 @@ class Base_IOModel
 
         //Save In Nambu form first;
         //Average the Up and down sectors if not AFM
+        assert(!greenIn.has_nan());
+        assert(!greenIn.has_inf());
         ClusterCubeCD_t green = greenIn;
         const size_t NN = green.n_slices;
 
