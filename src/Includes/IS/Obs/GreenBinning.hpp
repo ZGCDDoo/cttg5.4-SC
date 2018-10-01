@@ -57,8 +57,7 @@ class GreenBinning
                     SiteVector_t temp = static_cast<double>(dataCT_->sign_) * SiteVector_t({Mmat(2 * p1, 2 * p2), factAnormal * Mmat(2 * p1 + 1, 2 * p2), factAnormal * Mmat(2 * p1, 2 * p2 + 1), Mmat(2 * p1 + 1, 2 * p2 + 1)});
 #else
                     const double MFanormal = 0.5 * factAnormal * (Mmat(2 * p1 + 1, 2 * p2) + Mmat(2 * p1, 2 * p2 + 1));
-                    const double Mnormal = 0.5 * (Mmat(2 * p1, 2 * p2) + Mmat(2 * p1 + 1, 2 * p2 + 1));
-                    SiteVector_t temp = static_cast<double>(dataCT_->sign_) * SiteVector_t({Mnormal, MFanormal, MFanormal, Mnormal});
+                    SiteVector_t temp = static_cast<double>(dataCT_->sign_) * SiteVector_t({Mmat(2 * p1, 2 * p2), MFanormal, MFanormal, Mmat(2 * p1 + 1, 2 * p2 + 1)});
 #endif
                     double tau = dataCT_->vertices_[p1].tau() - dataCT_->vertices_[p2].tau();
                     if (tau < 0.0)

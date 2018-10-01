@@ -53,7 +53,8 @@ class SelfConsistency : public ABC_SelfConsistency
                                                                                                  hybridization_(model_.hybridizationMat()),
                                                                                                  selfEnergy_(),
                                                                                                  hybNext_(),
-                                                                                                 weights_(jj["WEIGHTSR"].get<double>(), jj["WEIGHTSI"].get<double>())
+                                                                                                 weights_(jj["WEIGHTSR"].get<double>(), jj["WEIGHTSI"].get<double>()),
+                                                                                                 breakSymmetry_(jj["BREAK_SYMMETRY"].get<bool>())
     {
 
         mpiUt::Print("Start of SC constructor");
@@ -85,10 +86,18 @@ class SelfConsistency : public ABC_SelfConsistency
         const ClusterMatrixCD_t tLocNambu = arma::kron(II2x2Nambu, model_.tLoc());
         const ClusterMatrixCD_t muNambu = model_.mu() * IINambu;
 
+        const ClusterMatrix_t II2x2Off = {{0.0, 1.0}, {1.0, 0.0}};
+        const ClusterMatrixCD_t SM = 1e-2 * ClusterMatrixCD_t(arma::kron(II2x2Off, ioModel_.signFAnormal()), ClusterMatrix_t(NNambu, NNambu).zeros());
+
         for (size_t nn = 0; nn < NGreen; nn++)
         {
             const cd_t iwn(0.0, (2.0 * nn + 1.0) * M_PI / model_.beta());
             selfEnergy_.slice(nn) = -nambuImpurity_.slice(nn).i() + iwn * II + muNambu - tLocNambu - hybridization_.slice(nn);
+            if (breakSymmetry_)
+            {
+                const double wn = iwn.imag();
+                selfEnergy_.slice(nn) += SM / (1.0 + wn * wn);
+            }
         }
 
         //1.) Patcher la self par HF de NGreen à NSelfCon
@@ -293,6 +302,7 @@ class SelfConsistency : public ABC_SelfConsistency
     ClusterCubeCD_t selfEnergy_;
     ClusterCubeCD_t hybNext_;
     const cd_t weights_;
+    const bool breakSymmetry_;
 };
 template <typename TIOModel, typename TModel, typename TH0>
 const ClusterMatrixCD_t SelfConsistency<TIOModel, TModel, TH0>::II = ClusterMatrixCD_t(TH0::Nc, TH0::Nc).eye();
